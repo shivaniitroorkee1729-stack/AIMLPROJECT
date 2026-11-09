@@ -43,9 +43,13 @@ class FaceValidationResult:
     face_area_pct: float = 0.0
 
 
-# Module-level detector singleton and hash-based validation cache
+from collections import OrderedDict
+import gc
+
+# Bounded LRU cache for face validation results (max 4 images in RAM)
+MAX_VALIDATION_CACHE_SIZE = 4
+_VALIDATION_CACHE: OrderedDict[str, "FaceValidationResult"] = OrderedDict()
 _DETECTOR_SINGLETON: Optional[HumanFaceDetector] = None
-_VALIDATION_CACHE = {}
 
 
 def get_detector() -> HumanFaceDetector:
@@ -96,9 +100,10 @@ def validate_face_image(
     """
     img_hash = compute_image_hash(image_input)
 
-    # Check cache
+    # Check bounded LRU cache
     cache_key = f"{img_hash}_{padding_ratio}"
     if cache_key in _VALIDATION_CACHE:
+        _VALIDATION_CACHE.move_to_end(cache_key)
         return _VALIDATION_CACHE[cache_key]
 
     # Normalize image to RGB PIL Image with EXIF orientation correction
@@ -172,6 +177,15 @@ def validate_face_image(
         confidence=confidence,
         face_area_pct=area_pct,
     )
+
+    # Enforce maximum cache capacity
+    while len(_VALIDATION_CACHE) >= MAX_VALIDATION_CACHE_SIZE:
+        _, old_res = _VALIDATION_CACHE.popitem(last=False)
+        del old_res.original_image
+        del old_res.annotated_image
+        del old_res.face_crop
+        del old_res
+        gc.collect()
 
     _VALIDATION_CACHE[cache_key] = result
     return result

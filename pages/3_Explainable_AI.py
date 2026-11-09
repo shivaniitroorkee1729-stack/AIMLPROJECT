@@ -16,7 +16,9 @@ from src.utils.visualization import (
     get_custom_css,
     THEME,
     plot_region_importance_chart,
+    render_pyplot_and_close,
 )
+from src.utils.memory import run_garbage_collection
 from src.models.model_loader import (
     get_efficientnet_model,
     get_gradcam_engine,
@@ -92,35 +94,81 @@ else:
     original_img = validation_res.original_image
     crop_bbox = validation_res.crop_bbox
 
-    st.markdown("---")
-    with st.spinner("Computing convolutional activations strictly on facial crop..."):
-        # Load engines
-        eff_model = get_efficientnet_model()
-        gradcam = get_gradcam_engine()
-        facial_analyzer = get_facial_analyzer()
-        au_extractor = get_au_extractor()
-        explainer = get_natural_language_explainer()
+    cache_key = f"xai_{validation_res.image_hash}_{target_class_choice}"
+    if cache_key in st.session_state:
+        cached = st.session_state[cache_key]
+        probs = cached["probs"]
+        pred_idx = cached["pred_idx"]
+        pred_class = cached["pred_class"]
+        cam_class_idx = cached["cam_class_idx"]
+        cam_class_name = cached["cam_class_name"]
+        heatmap = cached["heatmap"]
+        masks = cached["masks"]
+        region_pcts = cached["region_pcts"]
+        sorted_regions = cached["sorted_regions"]
+        active_aus = cached["active_aus"]
+    else:
+        with st.spinner("Computing convolutional activations strictly on facial crop..."):
+            eff_model = get_efficientnet_model()
+            gradcam = get_gradcam_engine()
+            facial_analyzer = get_facial_analyzer()
+            au_extractor = get_au_extractor()
 
-        # Transform face crop to tensor
-        transform = get_efficientnet_transforms(is_training=False)
-        tensor = transform(face_crop).unsqueeze(0)
+            # Transform face crop to tensor
+            transform = get_efficientnet_transforms(is_training=False)
+            tensor = transform(face_crop).unsqueeze(0)
 
-        # Base prediction on face crop
-        probs = eff_model.predict_probabilities(tensor)[0].cpu().numpy()
-        pred_idx = int(np.argmax(probs))
-        pred_class = NAVARASA_CLASSES[pred_idx]
-        confidence = float(probs[pred_idx])
+            # Base prediction on face crop
+            probs = eff_model.predict_probabilities(tensor)[0].cpu().numpy()
+            pred_idx = int(np.argmax(probs))
+            pred_class = NAVARASA_CLASSES[pred_idx]
 
-        # Determine target class index for Grad-CAM
-        if target_class_choice == "Automatic (Top Predicted Rasa)":
-            cam_class_idx = pred_idx
-            cam_class_name = pred_class
-        else:
-            cam_class_idx = CLASS_TO_IDX[target_class_choice]
-            cam_class_name = target_class_choice
+            # Determine target class index for Grad-CAM
+            if target_class_choice == "Automatic (Top Predicted Rasa)":
+                cam_class_idx = pred_idx
+                cam_class_name = pred_class
+            else:
+                cam_class_idx = CLASS_TO_IDX[target_class_choice]
+                cam_class_name = target_class_choice
 
-        # Generate exact Grad-CAM heatmap on the face crop
-        heatmap, _, _ = gradcam.generate_heatmap(tensor, target_class_idx=cam_class_idx)
+            # Generate exact Grad-CAM heatmap on the face crop
+            heatmap, _, _ = gradcam.generate_heatmap(tensor, target_class_idx=cam_class_idx)
+
+            # Extract landmarks and 6-region masks from the facial crop
+            landmarks, _ = facial_analyzer.extract_landmarks(face_crop)
+            masks = facial_analyzer.generate_region_masks(np.array(face_crop).shape, landmarks)
+            region_pcts, sorted_regions = facial_analyzer.calculate_region_importance(heatmap, masks)
+
+            # Extract AUs from the facial crop
+            aus, _ = au_extractor.extract_action_units(face_crop)
+            active_aus = [au for au in aus.values() if au["is_active"]]
+
+            del tensor
+            run_garbage_collection()
+
+            # Maintain bounded session cache (max 4 entries)
+            if "xai_cache_keys" not in st.session_state:
+                st.session_state["xai_cache_keys"] = []
+            if len(st.session_state["xai_cache_keys"]) >= 4:
+                oldest = st.session_state["xai_cache_keys"].pop(0)
+                st.session_state.pop(oldest, None)
+            st.session_state["xai_cache_keys"].append(cache_key)
+
+            st.session_state[cache_key] = {
+                "probs": probs,
+                "pred_idx": pred_idx,
+                "pred_class": pred_class,
+                "cam_class_idx": cam_class_idx,
+                "cam_class_name": cam_class_name,
+                "heatmap": heatmap,
+                "masks": masks,
+                "region_pcts": region_pcts,
+                "sorted_regions": sorted_regions,
+                "active_aus": active_aus,
+            }
+
+    gradcam = get_gradcam_engine()
+    explainer = get_natural_language_explainer()
 
         # Generate overlay on the face crop
         cmap_name = "jet" if "JET" in colormap_choice else "inferno"
@@ -134,15 +182,6 @@ else:
             alpha=alpha_slider,
             colormap=cmap_name,
         )
-
-        # Extract landmarks and 6-region masks from the facial crop
-        landmarks, det_result = facial_analyzer.extract_landmarks(face_crop)
-        masks = facial_analyzer.generate_region_masks(np.array(face_crop).shape, landmarks)
-        region_pcts, sorted_regions = facial_analyzer.calculate_region_importance(heatmap, masks)
-
-        # Extract AUs from the facial crop
-        aus, face_ok = au_extractor.extract_action_units(face_crop)
-        active_aus = [au for au in aus.values() if au["is_active"]]
 
     # Header Card for Prediction
     st.markdown(
@@ -194,7 +233,7 @@ else:
     with col_bar:
         st.markdown("### Facial-Region Grad-CAM Energy Distribution")
         fig_r = plot_region_importance_chart(region_pcts)
-        st.pyplot(fig_r)
+        render_pyplot_and_close(fig_r)
 
     with col_text:
         st.markdown("### Anatomical Importance Ranking")

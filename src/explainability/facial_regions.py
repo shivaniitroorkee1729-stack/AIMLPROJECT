@@ -88,26 +88,35 @@ class FacialRegionAnalyzer:
     Facial landmark extractor and region importance analyzer.
     """
 
-    def __init__(self, model_path=LANDMARKER_MODEL_PATH):
+    def __init__(self, model_path=LANDMARKER_MODEL_PATH, shared_detector=None):
         self.model_path = Path(model_path)
-        self.detector = None
-        self._init_detector()
+        self.detector = shared_detector
+        if self.detector is None:
+            self._init_detector()
 
     def _init_detector(self):
+        if self.detector is not None:
+            return
         if not HAS_MEDIAPIPE or not self.model_path.exists():
             return
 
         try:
-            base_options = python.BaseOptions(model_asset_path=str(self.model_path))
-            options = vision.FaceLandmarkerOptions(
-                base_options=base_options,
-                output_face_blendshapes=True,
-                num_faces=1
-            )
-            self.detector = vision.FaceLandmarker.create_from_options(options)
-        except Exception as e:
-            print(f"Warning: Could not create FaceLandmarker: {e}. Fallback active.")
-            self.detector = None
+            from src.models.model_loader import get_shared_face_landmarker
+            self.detector = get_shared_face_landmarker(self.model_path)
+        except Exception:
+            try:
+                base_options = python.BaseOptions(model_asset_path=str(self.model_path))
+                options = vision.FaceLandmarkerOptions(
+                    base_options=base_options,
+                    output_face_blendshapes=True,
+                    num_faces=4,
+                    min_face_detection_confidence=0.20,
+                    min_face_presence_confidence=0.20,
+                )
+                self.detector = vision.FaceLandmarker.create_from_options(options)
+            except Exception as e:
+                print(f"Warning: Could not create FaceLandmarker: {e}. Fallback active.")
+                self.detector = None
 
     def extract_landmarks(self, image_input):
         """

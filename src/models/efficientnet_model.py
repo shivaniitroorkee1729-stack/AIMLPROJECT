@@ -45,20 +45,20 @@ class NavarasaEfficientNet(nn.Module):
         # Hooks storage for Grad-CAM
         self.gradients = None
         self.activations = None
-        self._register_gradcam_hooks()
 
-    def _register_gradcam_hooks(self):
-        """Registers hooks on the final convolutional layer of the feature backbone."""
+    def register_gradcam_hooks(self):
+        """Registers dynamic forward and backward hooks for Grad-CAM inspection."""
         target_layer = self.features[-1]
 
-        def forward_hook(module, input, output):
-            self.activations = output
+        def forward_hook(module, inp, output):
+            self.activations = output.detach()
 
         def backward_hook(module, grad_input, grad_output):
-            self.gradients = grad_output[0]
+            self.gradients = grad_output[0].detach()
 
-        target_layer.register_forward_hook(forward_hook)
-        target_layer.register_full_backward_hook(backward_hook)
+        h_f = target_layer.register_forward_hook(forward_hook)
+        h_b = target_layer.register_full_backward_hook(backward_hook)
+        return h_f, h_b
 
     def freeze_backbone(self):
         """Freezes all layers in the feature backbone (Phase 1 training)."""
@@ -96,10 +96,12 @@ class NavarasaEfficientNet(nn.Module):
         return x
 
     def predict_probabilities(self, x):
-        """Returns softmax probabilities for batch tensor x."""
-        with torch.no_grad():
+        """Returns softmax probabilities for batch tensor x with zero memory leak."""
+        with torch.inference_mode():
             logits = self.forward(x)
-            return torch.softmax(logits, dim=1)
+            probs = torch.softmax(logits, dim=1)
+            del logits
+            return probs
 
 
 def load_efficientnet_model(checkpoint_path=EFFICIENTNET_BEST_MODEL_PATH, device=DEVICE):
@@ -107,8 +109,11 @@ def load_efficientnet_model(checkpoint_path=EFFICIENTNET_BEST_MODEL_PATH, device
     checkpoint_path = Path(checkpoint_path)
     model = NavarasaEfficientNet(pretrained=False)
     if checkpoint_path.exists():
-        state_dict = torch.load(checkpoint_path, map_location=device)
+        state_dict = torch.load(checkpoint_path, map_location=device, mmap=True)
         model.load_state_dict(state_dict)
+        del state_dict
+        import gc
+        gc.collect()
         print(f"Loaded EfficientNet-B0 checkpoint from {checkpoint_path}")
     else:
         print(f"No checkpoint found at {checkpoint_path}, using ImageNet pretrained weights.")

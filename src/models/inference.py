@@ -85,9 +85,10 @@ def predict_efficientnet(image_input, device=DEVICE, enforce_face_crop: bool = T
 
     tensor = transform(img).unsqueeze(0).to(device)
 
-    with torch.no_grad():
+    with torch.inference_mode():
         logits = model(tensor)
         probs = F.softmax(logits, dim=1)[0].cpu().numpy()
+        del logits
 
     pred_idx = int(np.argmax(probs))
     pred_class = NAVARASA_CLASSES[pred_idx]

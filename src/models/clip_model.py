@@ -22,6 +22,7 @@ from config.settings import (
     CLIP_MODEL_PATH,
     CLIP_EMBEDDINGS_CACHE,
     NAVARASA_CLASSES,
+    MODELS_DIR,
 )
 from src.data.preprocessing import get_clip_transforms
 
@@ -40,19 +41,79 @@ class CLIPClassifierPipeline:
         self.classes = NAVARASA_CLASSES
 
     def load_clip_encoder(self):
-        """Loads and freezes pretrained CLIP ViT-B/32 vision encoder."""
+        """Loads and freezes pretrained CLIP ViT-B/32 vision encoder, pruning unused text components."""
         if self.clip_model is None:
-            print(f"Loading CLIP ({CLIP_MODEL_NAME}, pretrained='{CLIP_PRETRAINED}') on {self.device}...")
-            model, _, preprocess = open_clip.create_model_and_transforms(
-                CLIP_MODEL_NAME, pretrained=CLIP_PRETRAINED
-            )
-            model = model.to(self.device)
-            model.eval()
-            # Freeze all parameters
-            for param in model.parameters():
-                param.requires_grad = False
-            self.clip_model = model
-            self.clip_preprocess = preprocess
+            visual_path = MODELS_DIR / "clip_visual_encoder.pt"
+            if not visual_path.exists():
+                parts = sorted(list(MODELS_DIR.glob("clip_visual_part_*.bin")))
+                if parts:
+                    import gzip, shutil
+                    print(f"Assembling standalone CLIP visual encoder from {len(parts)} binary chunks...")
+                    gz_temp = MODELS_DIR / "_temp_clip_visual.gz"
+                    with open(gz_temp, "wb") as f_out:
+                        for part in parts:
+                            with open(part, "rb") as f_in:
+                                shutil.copyfileobj(f_in, f_out)
+                    with gzip.open(gz_temp, "rb") as f_in:
+                        with open(visual_path, "wb") as f_out:
+                            shutil.copyfileobj(f_in, f_out)
+                    if gz_temp.exists():
+                        try:
+                            gz_temp.unlink()
+                        except Exception:
+                            pass
+
+            if visual_path.exists():
+                print(f"Loading standalone CLIP visual encoder from {visual_path} on {self.device}...")
+                visual = torch.load(visual_path, map_location=self.device, weights_only=False, mmap=True)
+                visual.eval()
+                for param in visual.parameters():
+                    param.requires_grad = False
+
+                from torchvision import transforms
+                preprocess = transforms.Compose([
+                    transforms.Resize(224, interpolation=transforms.InterpolationMode.BICUBIC, antialias=True),
+                    transforms.CenterCrop((224, 224)),
+                    transforms.ToTensor(),
+                    transforms.Normalize(mean=(0.48145466, 0.4578275, 0.40821073), std=(0.26862954, 0.26130258, 0.27577711)),
+                ])
+
+                class VisualModelWrapper(torch.nn.Module):
+                    def __init__(self, vis):
+                        super().__init__()
+                        self.visual = vis
+                    def encode_image(self, x):
+                        return self.visual(x)
+                    def forward(self, x):
+                        return self.visual(x)
+
+                self.clip_model = VisualModelWrapper(visual)
+                self.clip_preprocess = preprocess
+                import gc
+                gc.collect()
+            else:
+                print(f"Loading CLIP ({CLIP_MODEL_NAME}, pretrained='{CLIP_PRETRAINED}') on {self.device}...")
+                model, _, preprocess = open_clip.create_model_and_transforms(
+                    CLIP_MODEL_NAME, pretrained=CLIP_PRETRAINED
+                )
+                model = model.to(self.device)
+                model.eval()
+
+                # Memory Optimization: Prune unused text transformer components (~63M params, ~250MB RAM)
+                for attr in ["transformer", "token_embedding", "positional_embedding", "text_projection"]:
+                    if hasattr(model, attr):
+                        try:
+                            delattr(model, attr)
+                        except Exception:
+                            pass
+                import gc
+                gc.collect()
+
+                # Freeze remaining parameters
+                for param in model.parameters():
+                    param.requires_grad = False
+                self.clip_model = model
+                self.clip_preprocess = preprocess
         return self.clip_model, self.clip_preprocess
 
     def extract_image_embedding(self, image_input):
@@ -68,11 +129,14 @@ class CLIPClassifierPipeline:
             raise ValueError(f"Unsupported image type: {type(image_input)}")
 
         tensor = self.clip_preprocess(img).unsqueeze(0).to(self.device)
-        with torch.no_grad():
+        with torch.inference_mode():
             features = self.clip_model.encode_image(tensor)
             # L2 normalize embedding vector
             features = features / features.norm(dim=-1, keepdim=True)
-            return features.cpu().numpy().flatten()
+            emb = features.cpu().numpy().flatten()
+
+        del tensor, features
+        return emb
 
     def extract_batch_embeddings(self, dataloader):
         """

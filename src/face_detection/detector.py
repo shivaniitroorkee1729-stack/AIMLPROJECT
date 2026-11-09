@@ -126,34 +126,30 @@ class HumanFaceDetector:
                     print(f"Warning: Could not initialize cv2.FaceDetectorYN: {e}")
                     self.yunet_detector = None
 
-        # 2. Initialize MediaPipe FaceLandmarker
+        # 2. Initialize MediaPipe FaceLandmarker (Shared Singleton)
         if HAS_MEDIAPIPE and self.landmarker_path.exists():
             try:
-                base_options = python.BaseOptions(model_asset_path=str(self.landmarker_path))
-                
-                # Full-image landmarker (up to max_faces)
-                full_opts = vision.FaceLandmarkerOptions(
-                    base_options=base_options,
-                    output_face_blendshapes=True,
-                    num_faces=self.max_faces,
-                    min_face_detection_confidence=self.min_detection_confidence,
-                    min_face_presence_confidence=self.min_detection_confidence,
-                )
-                self.full_landmarker = vision.FaceLandmarker.create_from_options(full_opts)
-
-                # Crop landmarker (single face validation on extracted candidate crops)
-                crop_opts = vision.FaceLandmarkerOptions(
-                    base_options=base_options,
-                    output_face_blendshapes=True,
-                    num_faces=1,
-                    min_face_detection_confidence=self.min_detection_confidence,
-                    min_face_presence_confidence=self.min_detection_confidence,
-                )
-                self.crop_landmarker = vision.FaceLandmarker.create_from_options(crop_opts)
-            except Exception as e:
-                print(f"Warning: Could not initialize MediaPipe FaceLandmarker: {e}")
-                self.full_landmarker = None
-                self.crop_landmarker = None
+                from src.models.model_loader import get_shared_face_landmarker
+                shared_lm = get_shared_face_landmarker(self.landmarker_path)
+                self.full_landmarker = shared_lm
+                self.crop_landmarker = shared_lm
+            except Exception:
+                try:
+                    base_options = python.BaseOptions(model_asset_path=str(self.landmarker_path))
+                    opts = vision.FaceLandmarkerOptions(
+                        base_options=base_options,
+                        output_face_blendshapes=True,
+                        num_faces=self.max_faces,
+                        min_face_detection_confidence=self.min_detection_confidence,
+                        min_face_presence_confidence=self.min_detection_confidence,
+                    )
+                    lm = vision.FaceLandmarker.create_from_options(opts)
+                    self.full_landmarker = lm
+                    self.crop_landmarker = lm
+                except Exception as e:
+                    print(f"Warning: Could not initialize MediaPipe FaceLandmarker: {e}")
+                    self.full_landmarker = None
+                    self.crop_landmarker = None
 
     def preprocess_image(self, image_input: Union[Image.Image, np.ndarray, str, Path]) -> Tuple[Image.Image, int, int]:
         """

@@ -39,6 +39,7 @@ class GradCAM:
     def generate_heatmap(self, input_tensor, target_class_idx=None):
         """
         Generates class-specific Grad-CAM heatmap for a single image tensor [1, 3, 224, 224].
+        Hooks are registered dynamically and removed immediately after computation to prevent memory leaks.
 
         Args:
             input_tensor: torch.Tensor of shape [1, 3, H, W]
@@ -49,56 +50,81 @@ class GradCAM:
             predicted_idx: int
             confidence: float
         """
-        input_tensor = input_tensor.to(self.device)
-        input_tensor.requires_grad = True
+        import gc
 
-        self.model.zero_grad()
-        logits = self.model(input_tensor)
-        probs = F.softmax(logits, dim=1)
+        activations = None
+        gradients = None
+        target_layer = self.model.features[-1]
 
-        if target_class_idx is None:
-            target_class_idx = int(torch.argmax(logits, dim=1).item())
+        def forward_hook(module, inp, out):
+            nonlocal activations
+            activations = out.detach()
 
-        confidence = float(probs[0, target_class_idx].item())
+        def backward_hook(module, grad_in, grad_out):
+            nonlocal gradients
+            gradients = grad_out[0].detach()
 
-        # Target class score
-        score = logits[0, target_class_idx]
-        score.backward(retain_graph=True)
+        h_f = target_layer.register_forward_hook(forward_hook)
+        h_b = target_layer.register_full_backward_hook(backward_hook)
 
-        # Gradients and activations from hooks
-        gradients = self.model.gradients  # [1, C, H_feat, W_feat]
-        activations = self.model.activations  # [1, C, H_feat, W_feat]
+        try:
+            tensor = input_tensor.clone().detach().to(self.device)
+            tensor.requires_grad = True
 
-        if gradients is None or activations is None:
-            raise RuntimeError("Gradients or activations not captured by Grad-CAM hooks.")
+            self.model.zero_grad(set_to_none=True)
+            logits = self.model(tensor)
+            probs = F.softmax(logits, dim=1)
 
-        # Global average pooling of gradients along spatial dimensions -> alpha weights [1, C, 1, 1]
-        weights = torch.mean(gradients, dim=(2, 3), keepdim=True)
+            if target_class_idx is None:
+                target_class_idx = int(torch.argmax(logits, dim=1).item())
 
-        # Weighted combination of activation maps
-        cam = torch.sum(weights * activations, dim=1, keepdim=True)  # [1, 1, H_feat, W_feat]
+            confidence = float(probs[0, target_class_idx].item())
 
-        # Apply ReLU to retain only positive influence
-        cam = F.relu(cam)
+            # Target class score backpropagation without retain_graph to immediately free backward graph
+            score = logits[0, target_class_idx]
+            score.backward()
 
-        # Upsample to input tensor resolution
-        cam = F.interpolate(
-            cam,
-            size=(input_tensor.shape[2], input_tensor.shape[3]),
-            mode="bilinear",
-            align_corners=False
-        )
+            if gradients is None or activations is None:
+                gradients = getattr(self.model, "gradients", None)
+                activations = getattr(self.model, "activations", None)
 
-        cam_np = cam.squeeze().detach().cpu().numpy()
+            if gradients is None or activations is None:
+                raise RuntimeError("Gradients or activations not captured by Grad-CAM hooks.")
 
-        # Normalize between 0 and 1
-        cam_min, cam_max = np.min(cam_np), np.max(cam_np)
-        if cam_max - cam_min > 1e-8:
-            heatmap = (cam_np - cam_min) / (cam_max - cam_min)
-        else:
-            heatmap = np.zeros_like(cam_np)
+            # Global average pooling of gradients along spatial dimensions -> alpha weights [1, C, 1, 1]
+            weights = torch.mean(gradients, dim=(2, 3), keepdim=True)
 
-        return heatmap, target_class_idx, confidence
+            # Weighted combination of activation maps
+            cam = torch.sum(weights * activations, dim=1, keepdim=True)
+            cam = F.relu(cam)
+
+            # Upsample to input tensor resolution
+            cam = F.interpolate(
+                cam,
+                size=(tensor.shape[2], tensor.shape[3]),
+                mode="bilinear",
+                align_corners=False
+            )
+
+            cam_np = cam.squeeze().cpu().numpy()
+
+            # Normalize between 0 and 1
+            cam_min, cam_max = np.min(cam_np), np.max(cam_np)
+            if cam_max - cam_min > 1e-8:
+                heatmap = (cam_np - cam_min) / (cam_max - cam_min)
+            else:
+                heatmap = np.zeros_like(cam_np)
+
+            del cam, weights, logits, probs, score, tensor, activations, gradients
+            return heatmap, target_class_idx, confidence
+
+        finally:
+            h_f.remove()
+            h_b.remove()
+            self.model.activations = None
+            self.model.gradients = None
+            self.model.zero_grad(set_to_none=True)
+            gc.collect()
 
     def overlay_heatmap(self, original_image, heatmap, alpha=0.55, colormap="jet"):
         """

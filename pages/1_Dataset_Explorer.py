@@ -180,8 +180,11 @@ with tab3:
             for idx, p in enumerate(img_paths):
                 col = img_cols[idx % 4]
                 with col:
-                    img = Image.open(p)
-                    st.image(img, caption=p.name, use_container_width=True)
+                    with Image.open(p) as img:
+                        # Downsample preview thumbnail to preserve memory
+                        img_copy = img.copy()
+                        img_copy.thumbnail((320, 320))
+                        st.image(img_copy, caption=p.name, use_container_width=True)
         else:
             st.warning("No images found in class folder.")
     else:

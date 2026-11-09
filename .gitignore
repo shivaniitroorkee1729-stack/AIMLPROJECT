@@ -18,6 +18,10 @@ data/processed/
 # Embedding caches (large binary arrays)
 *.npz
 
+# Unpacked large model weights (assembled automatically at runtime from chunked binaries)
+artifacts/models/clip_visual_encoder.pt
+
+
 # IDE & Editor Configs
 .vscode/
 .idea/

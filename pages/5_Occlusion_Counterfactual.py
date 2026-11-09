@@ -15,7 +15,9 @@ from src.utils.visualization import (
     get_custom_css,
     THEME,
     plot_occlusion_sensitivity_chart,
+    render_pyplot_and_close,
 )
+from src.utils.memory import run_garbage_collection
 from src.models.model_loader import (
     get_efficientnet_model,
     get_facial_analyzer,
@@ -92,37 +94,56 @@ elif not validation_res.is_valid:
 else:
     face_crop = validation_res.face_crop
 
-    st.markdown("---")
-    with st.spinner("Executing region occlusion tests and counterfactual analysis on facial crop..."):
-        facial_analyzer = get_facial_analyzer()
-        occlusion_analyzer = get_occlusion_analyzer()
-        cf_analyzer = get_counterfactual_analyzer()
-        au_extractor = get_au_extractor()
-        eff_model = get_efficientnet_model()
-        gradcam = get_gradcam_engine()
-        explainer = get_natural_language_explainer()
+    cache_key = f"occ_{validation_res.image_hash}_{occlusion_mode}"
+    if cache_key in st.session_state:
+        cached = st.session_state[cache_key]
+        masks = cached["masks"]
+        occ_results = cached["occ_results"]
+        aus = cached["aus"]
+    else:
+        with st.spinner("Executing region occlusion tests on facial crop..."):
+            facial_analyzer = get_facial_analyzer()
+            occlusion_analyzer = get_occlusion_analyzer()
+            au_extractor = get_au_extractor()
 
-        # Landmarks and masks strictly on facial crop
-        landmarks, _ = facial_analyzer.extract_landmarks(face_crop)
-        masks = facial_analyzer.generate_region_masks(np.array(face_crop).shape, landmarks)
+            # Landmarks and masks strictly on facial crop
+            landmarks, _ = facial_analyzer.extract_landmarks(face_crop)
+            masks = facial_analyzer.generate_region_masks(np.array(face_crop).shape, landmarks)
 
-        # Run full sensitivity analysis on facial crop
-        occ_results = occlusion_analyzer.run_sensitivity_analysis(
-            face_crop, masks, mode=occlusion_mode
-        )
+            # Run full sensitivity analysis on facial crop
+            occ_results = occlusion_analyzer.run_sensitivity_analysis(
+                face_crop, masks, mode=occlusion_mode
+            )
 
-        # Extract AUs from facial crop
-        aus, face_ok = au_extractor.extract_action_units(face_crop)
+            # Extract AUs from facial crop
+            aus, face_ok = au_extractor.extract_action_units(face_crop)
 
-        # Counterfactual analysis
-        orig_cls = occ_results["original"]["predicted_class"]
-        orig_probs = occ_results["original"]["probabilities"]
-        cf_results = cf_analyzer.analyze_counterfactual(
-            current_class=orig_cls,
-            target_class=target_counterfactual,
-            current_aus=aus,
-            current_probs=orig_probs
-        )
+            run_garbage_collection()
+
+            # Maintain bounded session cache (max 4 entries)
+            if "occ_cache_keys" not in st.session_state:
+                st.session_state["occ_cache_keys"] = []
+            if len(st.session_state["occ_cache_keys"]) >= 4:
+                oldest = st.session_state["occ_cache_keys"].pop(0)
+                st.session_state.pop(oldest, None)
+            st.session_state["occ_cache_keys"].append(cache_key)
+
+            st.session_state[cache_key] = {
+                "masks": masks,
+                "occ_results": occ_results,
+                "aus": aus,
+            }
+
+    # Counterfactual analysis is lightweight mathematical comparison
+    cf_analyzer = get_counterfactual_analyzer()
+    orig_cls = occ_results["original"]["predicted_class"]
+    orig_probs = occ_results["original"]["probabilities"]
+    cf_results = cf_analyzer.analyze_counterfactual(
+        current_class=orig_cls,
+        target_class=target_counterfactual,
+        current_aus=aus,
+        current_probs=orig_probs
+    )
 
     tab_occ, tab_cf = st.tabs(["🛡️ Regional Occlusion Sensitivity", "🔄 Counterfactual Feature Shifts"])
 
@@ -144,7 +165,7 @@ else:
 
         st.markdown("### Sensitivity Bar Chart (Confidence Drop per Masked Region)")
         fig_occ = plot_occlusion_sensitivity_chart(occ_results["regions"])
-        st.pyplot(fig_occ)
+        render_pyplot_and_close(fig_occ)
 
         st.markdown("---")
         st.markdown("### Interactive Region Mask Inspector")

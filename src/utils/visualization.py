@@ -156,7 +156,7 @@ def plot_probability_bars(probabilities, title="Navarasa Class Probabilities (%)
     # Colors per rasa
     colors = [RASA_DESCRIPTIONS.get(c, {}).get("color", "#1976D2") for c in classes]
 
-    fig, ax = plt.subplots(figsize=(8, 4.5), dpi=200)
+    fig, ax = plt.subplots(figsize=(8, 4.2), dpi=110)
     y_pos = np.arange(len(classes))
 
     bars = ax.barh(y_pos, scores, color=colors, edgecolor="#222", height=0.6, alpha=0.85)
@@ -189,7 +189,7 @@ def plot_dual_probability_comparison_chart(clip_probs, eff_probs):
     clip_vals = [clip_probs.get(c, 0.0) * 100 for c in classes]
     eff_vals = [eff_probs.get(c, 0.0) * 100 for c in classes]
 
-    fig, ax = plt.subplots(figsize=(9, 5), dpi=200)
+    fig, ax = plt.subplots(figsize=(9, 4.8), dpi=110)
     bars1 = ax.barh(y_pos - height / 2, clip_vals, height, label="CLIP ViT-B/32 + LogReg", color="#1E88E5", alpha=0.85)
     bars2 = ax.barh(y_pos + height / 2, eff_vals, height, label="EfficientNet-B0", color="#43A047", alpha=0.85)
 
@@ -213,7 +213,7 @@ def plot_region_importance_chart(region_pcts, title="Facial Region Grad-CAM Acti
 
     colors = ["#4285F4", "#EA4335", "#FBBC05", "#34A853", "#FF7043", "#AB47BC"]
 
-    fig, ax = plt.subplots(figsize=(7, 3.8), dpi=200)
+    fig, ax = plt.subplots(figsize=(7, 3.6), dpi=110)
     bars = ax.bar(regions, scores, color=colors[:len(regions)], edgecolor="#333", width=0.55)
     ax.set_title(title, fontsize=11, fontweight="bold", pad=12)
     ax.set_ylabel("Activation Energy (%)", fontsize=10)
@@ -239,7 +239,7 @@ def plot_action_units_chart(action_units):
     intensities = [action_units[au]["intensity"] for au in au_ids]
     colors = ["#D32F2F" if action_units[au]["is_active"] else "#90A4AE" for au in au_ids]
 
-    fig, ax = plt.subplots(figsize=(10, 4), dpi=200)
+    fig, ax = plt.subplots(figsize=(10, 3.8), dpi=110)
     bars = ax.bar(au_ids, intensities, color=colors, edgecolor="#333", width=0.6)
     ax.set_title("Facial Action Unit (FACS) Intensities & Activation (Red = Active)", fontsize=11, fontweight="bold", pad=12)
     ax.set_ylabel("Intensity (0.0 - 1.0)", fontsize=10)
@@ -267,7 +267,7 @@ def plot_occlusion_sensitivity_chart(region_results):
     regions = list(region_results.keys())
     drops = [region_results[r]["confidence_drop"] * 100 for r in regions]
 
-    fig, ax = plt.subplots(figsize=(8, 4), dpi=200)
+    fig, ax = plt.subplots(figsize=(8, 3.8), dpi=110)
     bars = ax.bar(regions, drops, color="#E65100", edgecolor="#333", width=0.55)
     ax.set_title("Occlusion Sensitivity: Confidence Drop per Masked Region (%)", fontsize=11, fontweight="bold", pad=12)
     ax.set_ylabel("Confidence Drop (%)", fontsize=10)
@@ -285,3 +285,16 @@ def plot_occlusion_sensitivity_chart(region_results):
     plt.xticks(rotation=20, ha="right", fontsize=9, fontweight="bold")
     plt.tight_layout()
     return fig
+
+
+def render_pyplot_and_close(fig):
+    """
+    Renders a matplotlib figure in Streamlit and immediately closes it
+    to eliminate figure buffer retention in RAM.
+    """
+    try:
+        import streamlit as st
+        st.pyplot(fig, clear_figure=True)
+    finally:
+        plt.close(fig)
+

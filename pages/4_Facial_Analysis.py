@@ -16,7 +16,9 @@ from src.utils.visualization import (
     get_custom_css,
     THEME,
     plot_action_units_chart,
+    render_pyplot_and_close,
 )
+from src.utils.memory import run_garbage_collection
 from src.models.model_loader import (
     get_efficientnet_model,
     get_gradcam_engine,
@@ -91,40 +93,85 @@ elif not validation_res.is_valid:
 else:
     face_crop = validation_res.face_crop
 
-    st.markdown("---")
-    with st.spinner("Analyzing facial geometry and muscular action units on facial crop..."):
-        facial_analyzer = get_facial_analyzer()
-        au_extractor = get_au_extractor()
-        eff_model = get_efficientnet_model()
-        gradcam = get_gradcam_engine()
-        comparator = get_top_two_comparator()
+    cache_key = f"fa_{validation_res.image_hash}"
+    if cache_key in st.session_state:
+        cached = st.session_state[cache_key]
+        landmarks = cached["landmarks"]
+        masks = cached["masks"]
+        annotated_crop = cached["annotated_crop"]
+        aus = cached["aus"]
+        face_detected = cached["face_detected"]
+        prob_dict = cached["prob_dict"]
+        sorted_probs = cached["sorted_probs"]
+        top1_cls = cached["top1_cls"]
+        top1_prob = cached["top1_prob"]
+        top2_cls = cached["top2_cls"]
+        top2_prob = cached["top2_prob"]
+        reg_pcts1 = cached["reg_pcts1"]
+        reg_pcts2 = cached["reg_pcts2"]
+        top2_report = cached["top2_report"]
+    else:
+        with st.spinner("Analyzing facial geometry and muscular action units on facial crop..."):
+            facial_analyzer = get_facial_analyzer()
+            au_extractor = get_au_extractor()
+            eff_model = get_efficientnet_model()
+            gradcam = get_gradcam_engine()
+            comparator = get_top_two_comparator()
 
-        # 1. Landmarks & Masks strictly on facial crop
-        landmarks, det_result = facial_analyzer.extract_landmarks(face_crop)
-        masks = facial_analyzer.generate_region_masks(np.array(face_crop).shape, landmarks)
-        annotated_crop = facial_analyzer.draw_landmarks_and_regions(face_crop, landmarks, masks)
+            # 1. Landmarks & Masks strictly on facial crop
+            landmarks, det_result = facial_analyzer.extract_landmarks(face_crop)
+            masks = facial_analyzer.generate_region_masks(np.array(face_crop).shape, landmarks)
+            annotated_crop = facial_analyzer.draw_landmarks_and_regions(face_crop, landmarks, masks)
 
-        # 2. Action Units strictly from facial crop
-        aus, face_detected = au_extractor.extract_action_units(face_crop)
+            # 2. Action Units strictly from facial crop
+            aus, face_detected = au_extractor.extract_action_units(face_crop)
 
-        # 3. Model Inference & Grad-CAM for Top Two on facial crop
-        transform = get_efficientnet_transforms(is_training=False)
-        tensor = transform(face_crop).unsqueeze(0)
-        probs = eff_model.predict_probabilities(tensor)[0].cpu().numpy()
-        prob_dict = {cls: float(probs[i]) for i, cls in enumerate(NAVARASA_CLASSES)}
+            # 3. Model Inference & Grad-CAM for Top Two on facial crop
+            transform = get_efficientnet_transforms(is_training=False)
+            tensor = transform(face_crop).unsqueeze(0)
+            probs = eff_model.predict_probabilities(tensor)[0].cpu().numpy()
+            prob_dict = {cls: float(probs[i]) for i, cls in enumerate(NAVARASA_CLASSES)}
 
-        sorted_probs = sorted(prob_dict.items(), key=lambda x: x[1], reverse=True)
-        top1_cls, top1_prob = sorted_probs[0]
-        top2_cls, top2_prob = sorted_probs[1]
+            sorted_probs = sorted(prob_dict.items(), key=lambda x: x[1], reverse=True)
+            top1_cls, top1_prob = sorted_probs[0]
+            top2_cls, top2_prob = sorted_probs[1]
 
-        # Grad-CAM for Top 1 and Top 2
-        cam1, _, _ = gradcam.generate_heatmap(tensor, target_class_idx=CLASS_TO_IDX[top1_cls])
-        cam2, _, _ = gradcam.generate_heatmap(tensor, target_class_idx=CLASS_TO_IDX[top2_cls])
+            # Grad-CAM for Top 1 and Top 2
+            cam1, _, _ = gradcam.generate_heatmap(tensor, target_class_idx=CLASS_TO_IDX[top1_cls])
+            cam2, _, _ = gradcam.generate_heatmap(tensor, target_class_idx=CLASS_TO_IDX[top2_cls])
 
-        reg_pcts1, _ = facial_analyzer.calculate_region_importance(cam1, masks)
-        reg_pcts2, _ = facial_analyzer.calculate_region_importance(cam2, masks)
+            reg_pcts1, _ = facial_analyzer.calculate_region_importance(cam1, masks)
+            reg_pcts2, _ = facial_analyzer.calculate_region_importance(cam2, masks)
 
-        top2_report = comparator.compare(prob_dict, reg_pcts1, reg_pcts2, aus)
+            top2_report = comparator.compare(prob_dict, reg_pcts1, reg_pcts2, aus)
+
+            del tensor
+            run_garbage_collection()
+
+            # Maintain bounded session cache (max 4 entries)
+            if "fa_cache_keys" not in st.session_state:
+                st.session_state["fa_cache_keys"] = []
+            if len(st.session_state["fa_cache_keys"]) >= 4:
+                oldest = st.session_state["fa_cache_keys"].pop(0)
+                st.session_state.pop(oldest, None)
+            st.session_state["fa_cache_keys"].append(cache_key)
+
+            st.session_state[cache_key] = {
+                "landmarks": landmarks,
+                "masks": masks,
+                "annotated_crop": annotated_crop,
+                "aus": aus,
+                "face_detected": face_detected,
+                "prob_dict": prob_dict,
+                "sorted_probs": sorted_probs,
+                "top1_cls": top1_cls,
+                "top1_prob": top1_prob,
+                "top2_cls": top2_cls,
+                "top2_prob": top2_prob,
+                "reg_pcts1": reg_pcts1,
+                "reg_pcts2": reg_pcts2,
+                "top2_report": top2_report,
+            }
 
     tab_mesh, tab_au, tab_top2 = st.tabs([
         "📍 Dense Mesh & 6 Regions",
@@ -157,7 +204,7 @@ else:
             st.warning("No face detected by landmarker; reporting zeroed baselines.")
 
         fig_au = plot_action_units_chart(aus)
-        st.pyplot(fig_au)
+        render_pyplot_and_close(fig_au)
 
         st.markdown("#### Action Unit Detail Table")
         au_table = []

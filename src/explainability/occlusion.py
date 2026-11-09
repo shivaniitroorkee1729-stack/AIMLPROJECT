@@ -86,11 +86,15 @@ class OcclusionSensitivityAnalyzer:
         """
         Occludes each region in region_masks and tracks prediction shift.
         """
+        import gc
+
         # 1. Base inference on original unmasked image
         orig_tensor = self.transform(original_image).unsqueeze(0).to(self.device)
-        with torch.no_grad():
+        with torch.inference_mode():
             orig_logits = self.model(orig_tensor)
             orig_probs = F.softmax(orig_logits, dim=1)[0].cpu().numpy()
+
+        del orig_tensor, orig_logits
 
         orig_class_idx = int(np.argmax(orig_probs))
         orig_class = self.classes[orig_class_idx]
@@ -102,7 +106,7 @@ class OcclusionSensitivityAnalyzer:
             "probabilities": {cls: float(orig_probs[i]) for i, cls in enumerate(self.classes)}
         }
 
-        # 2. Iterate each facial region
+        # 2. Iterate each facial region sequentially
         region_results = {}
         occluded_images = {}
         max_drop = -1.0
@@ -110,12 +114,18 @@ class OcclusionSensitivityAnalyzer:
 
         for region_name, mask in region_masks.items():
             occluded_img = apply_mask_to_image(original_image, mask, mode=mode)
-            occluded_images[region_name] = occluded_img
+            # Store memory-optimized thumbnail copy for display preview
+            preview = occluded_img.copy()
+            if preview.width > 256 or preview.height > 256:
+                preview.thumbnail((256, 256))
+            occluded_images[region_name] = preview
 
             occ_tensor = self.transform(occluded_img).unsqueeze(0).to(self.device)
-            with torch.no_grad():
+            with torch.inference_mode():
                 occ_logits = self.model(occ_tensor)
                 occ_probs = F.softmax(occ_logits, dim=1)[0].cpu().numpy()
+
+            del occ_tensor, occ_logits, occluded_img
 
             occ_class_idx = int(np.argmax(occ_probs))
             occ_class = self.classes[occ_class_idx]
