@@ -108,9 +108,8 @@ if input_image is not None:
         heatmap, _, _ = gradcam.generate_heatmap(tensor, target_class_idx=cam_class_idx)
 
         # Generate overlay
-        import cv2
-        cm_flag = cv2.COLORMAP_JET if "JET" in colormap_choice else cv2.COLORMAP_INFERNO
-        overlay = gradcam.overlay_heatmap(input_image, heatmap, alpha=alpha_slider, colormap=cm_flag)
+        cmap_name = "jet" if "JET" in colormap_choice else "inferno"
+        overlay = gradcam.overlay_heatmap(input_image, heatmap, alpha=alpha_slider, colormap=cmap_name)
 
         # Extract landmarks and 6-region masks
         landmarks, det_result = facial_analyzer.extract_landmarks(input_image)
@@ -145,10 +144,10 @@ if input_image is not None:
         st.image(input_image, use_container_width=True)
     with col_cam:
         st.markdown(f"#### 2. Raw Grad-CAM ({cam_class_name})")
-        # Display grayscale or colored heatmap
-        cam_vis = np.uint8(255 * heatmap)
-        cam_vis_colored = cv2.applyColorMap(cam_vis, cm_flag)
-        st.image(cv2.cvtColor(cam_vis_colored, cv2.COLOR_BGR2RGB), use_container_width=True)
+        import matplotlib.pyplot as plt
+        cmap_fn = plt.colormaps[cmap_name] if hasattr(plt, "colormaps") else plt.cm.get_cmap(cmap_name)
+        cam_vis_colored = (cmap_fn(heatmap)[:, :, :3] * 255).astype(np.uint8)
+        st.image(cam_vis_colored, use_container_width=True)
     with col_over:
         st.markdown("#### 3. Overlay Grounding")
         st.image(overlay, use_container_width=True)

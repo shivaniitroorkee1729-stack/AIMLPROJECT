@@ -2,15 +2,22 @@
 Occlusion-based Sensitivity Analysis.
 Systematically occludes (masks or blurs) specified facial regions to measure
 the model's prediction sensitivity to individual anatomical structures.
+Supports both OpenCV and pure PIL fallbacks.
 """
 
 import sys
 from pathlib import Path
 import numpy as np
-import cv2
-from PIL import Image
+from PIL import Image, ImageFilter
 import torch
 import torch.nn.functional as F
+
+try:
+    import cv2
+    HAS_CV2 = True
+except (ImportError, Exception):
+    cv2 = None
+    HAS_CV2 = False
 
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 from config.settings import NAVARASA_CLASSES, DEVICE
@@ -28,13 +35,18 @@ def apply_mask_to_image(image, mask, mode="gaussian_blur"):
         occluded_image: PIL Image
     """
     if isinstance(image, Image.Image):
-        img_np = np.array(image.convert("RGB"))
+        pil_img = image.convert("RGB")
+        img_np = np.array(pil_img)
     else:
         img_np = image.copy()
+        pil_img = Image.fromarray(img_np)
 
     h, w = img_np.shape[:2]
     if mask.shape[:2] != (h, w):
-        mask_resized = cv2.resize(mask, (w, h), interpolation=cv2.INTER_NEAREST)
+        if HAS_CV2:
+            mask_resized = cv2.resize(mask, (w, h), interpolation=cv2.INTER_NEAREST)
+        else:
+            mask_resized = np.array(Image.fromarray(mask).resize((w, h), Image.Resampling.NEAREST))
     else:
         mask_resized = mask
 
@@ -42,7 +54,11 @@ def apply_mask_to_image(image, mask, mode="gaussian_blur"):
     occluded_np = img_np.copy()
 
     if mode == "gaussian_blur":
-        blurred = cv2.GaussianBlur(img_np, (35, 35), 15)
+        if HAS_CV2:
+            blurred = cv2.GaussianBlur(img_np, (35, 35), 15)
+        else:
+            blurred_pil = pil_img.filter(ImageFilter.GaussianBlur(radius=15))
+            blurred = np.array(blurred_pil)
         occluded_np[binary_mask] = blurred[binary_mask]
     elif mode == "gray":
         occluded_np[binary_mask] = [128, 128, 128]
@@ -69,12 +85,6 @@ class OcclusionSensitivityAnalyzer:
     def run_sensitivity_analysis(self, original_image, region_masks, mode="gaussian_blur"):
         """
         Occludes each region in region_masks and tracks prediction shift.
-
-        Returns:
-            original_result: dict
-            region_results: dict of {region_name: {...}}
-            occluded_images: dict of {region_name: PIL.Image}
-            most_sensitive_region: str
         """
         # 1. Base inference on original unmasked image
         orig_tensor = self.transform(original_image).unsqueeze(0).to(self.device)
@@ -111,7 +121,6 @@ class OcclusionSensitivityAnalyzer:
             occ_class = self.classes[occ_class_idx]
             occ_conf = float(occ_probs[occ_class_idx])
 
-            # Drop in confidence for the original predicted class
             prob_drop = float(orig_conf - occ_probs[orig_class_idx])
             prob_change_pct = float((prob_drop / orig_conf) * 100.0) if orig_conf > 0 else 0.0
 

@@ -2,15 +2,24 @@
 Explainable AI — Gradient-weighted Class Activation Mapping (Grad-CAM).
 Calculates exact class-specific Grad-CAM heatmaps from feature activations
 and gradients of the fine-tuned EfficientNet-B0 model.
+Supports both OpenCV and pure PIL/Matplotlib colormap rendering.
 """
 
 import sys
 from pathlib import Path
 import numpy as np
-import cv2
 from PIL import Image
 import torch
 import torch.nn.functional as F
+import matplotlib.pyplot as plt
+
+# Safe OpenCV import with fallback
+try:
+    import cv2
+    HAS_CV2 = True
+except (ImportError, Exception):
+    cv2 = None
+    HAS_CV2 = False
 
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 from config.settings import NAVARASA_CLASSES, DEVICE
@@ -91,15 +100,16 @@ class GradCAM:
 
         return heatmap, target_class_idx, confidence
 
-    def overlay_heatmap(self, original_image, heatmap, alpha=0.55, colormap=cv2.COLORMAP_JET):
+    def overlay_heatmap(self, original_image, heatmap, alpha=0.55, colormap="jet"):
         """
         Overlays Grad-CAM heatmap onto the original RGB image.
+        Uses OpenCV if available, or pure PIL/Matplotlib fallback.
 
         Args:
             original_image: PIL Image or np.ndarray [H, W, 3] (RGB)
             heatmap: 2D np.ndarray [H, W] (normalized to [0, 1])
-            alpha: float, transparency factor
-            colormap: OpenCV colormap constant
+            alpha: float, transparency factor (0.0 to 1.0)
+            colormap: str ('jet' or 'inferno') or OpenCV colormap flag
 
         Returns:
             overlay: np.ndarray [H, W, 3] in RGB format (uint8)
@@ -111,18 +121,34 @@ class GradCAM:
 
         h, w = rgb_img.shape[:2]
 
-        # Resize heatmap to original image dimensions if different
-        if heatmap.shape[:2] != (h, w):
-            resized_cam = cv2.resize(heatmap, (w, h), interpolation=cv2.INTER_LINEAR)
+        # Resize heatmap to match image dimensions
+        if HAS_CV2:
+            if heatmap.shape[:2] != (h, w):
+                resized_cam = cv2.resize(heatmap, (w, h), interpolation=cv2.INTER_LINEAR)
+            else:
+                resized_cam = heatmap
+
+            cv_cmap = cv2.COLORMAP_JET
+            if isinstance(colormap, str):
+                if "inferno" in colormap.lower():
+                    cv_cmap = cv2.COLORMAP_INFERNO
+            elif isinstance(colormap, int):
+                cv_cmap = colormap
+
+            heatmap_uint8 = np.uint8(255 * resized_cam)
+            heatmap_colored = cv2.applyColorMap(heatmap_uint8, cv_cmap)
+            heatmap_colored = cv2.cvtColor(heatmap_colored, cv2.COLOR_BGR2RGB)
+            overlay = cv2.addWeighted(rgb_img, 1.0 - alpha, heatmap_colored, alpha, 0)
+            return overlay
         else:
-            resized_cam = heatmap
+            # Pure PIL + Matplotlib fallback
+            pil_cam = Image.fromarray((heatmap * 255).astype(np.uint8))
+            resized_cam = np.array(pil_cam.resize((w, h), Image.Resampling.BILINEAR)) / 255.0
 
-        # Convert heatmap to uint8 colormap
-        heatmap_uint8 = np.uint8(255 * resized_cam)
-        heatmap_colored = cv2.applyColorMap(heatmap_uint8, colormap)
-        # Convert OpenCV BGR to RGB
-        heatmap_colored = cv2.cvtColor(heatmap_colored, cv2.COLOR_BGR2RGB)
+            cmap_name = "inferno" if (isinstance(colormap, str) and "inferno" in colormap.lower()) else "jet"
+            cmap_fn = plt.colormaps[cmap_name] if hasattr(plt, "colormaps") else plt.cm.get_cmap(cmap_name)
+            heatmap_rgba = cmap_fn(resized_cam)
+            heatmap_rgb = (heatmap_rgba[:, :, :3] * 255).astype(np.uint8)
 
-        # Alpha blend overlay: image * (1 - alpha) + heatmap * alpha
-        overlay = cv2.addWeighted(rgb_img, 1.0 - alpha, heatmap_colored, alpha, 0)
-        return overlay
+            blended = (rgb_img.astype(float) * (1.0 - alpha) + heatmap_rgb.astype(float) * alpha).clip(0, 255).astype(np.uint8)
+            return blended
