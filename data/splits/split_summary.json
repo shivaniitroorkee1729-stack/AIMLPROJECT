@@ -1,0 +1,66 @@
+{
+  "total_unique_samples": 14100,
+  "deduplicated_removed": 705,
+  "train_count": 9870,
+  "val_count": 2115,
+  "test_count": 2115,
+  "train_percentage": 70.0,
+  "val_percentage": 15.0,
+  "test_percentage": 15.0,
+  "class_breakdown": {
+    "Shringara": {
+      "train": 942,
+      "val": 201,
+      "test": 202,
+      "total": 1345
+    },
+    "Hasya": {
+      "train": 1165,
+      "val": 250,
+      "test": 249,
+      "total": 1664
+    },
+    "Karuna": {
+      "train": 1152,
+      "val": 247,
+      "test": 247,
+      "total": 1646
+    },
+    "Raudra": {
+      "train": 1117,
+      "val": 239,
+      "test": 239,
+      "total": 1595
+    },
+    "Veera": {
+      "train": 1096,
+      "val": 235,
+      "test": 235,
+      "total": 1566
+    },
+    "Bhayanaka": {
+      "train": 1127,
+      "val": 241,
+      "test": 242,
+      "total": 1610
+    },
+    "Bibhatsa": {
+      "train": 1091,
+      "val": 234,
+      "test": 234,
+      "total": 1559
+    },
+    "Adbhuta": {
+      "train": 1040,
+      "val": 223,
+      "test": 223,
+      "total": 1486
+    },
+    "Shanta": {
+      "train": 1140,
+      "val": 245,
+      "test": 244,
+      "total": 1629
+    }
+  }
+}

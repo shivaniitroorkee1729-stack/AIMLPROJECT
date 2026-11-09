@@ -1,0 +1,43 @@
+{
+  "total_valid_images": 14805,
+  "class_counts": {
+    "Shringara": 1605,
+    "Hasya": 1698,
+    "Karuna": 1650,
+    "Raudra": 1621,
+    "Veera": 1690,
+    "Bhayanaka": 1630,
+    "Bibhatsa": 1610,
+    "Adbhuta": 1650,
+    "Shanta": 1651
+  },
+  "class_distribution_percentages": {
+    "Shringara": 10.84,
+    "Hasya": 11.47,
+    "Karuna": 11.14,
+    "Raudra": 10.95,
+    "Veera": 11.42,
+    "Bhayanaka": 11.01,
+    "Bibhatsa": 10.87,
+    "Adbhuta": 11.14,
+    "Shanta": 11.15
+  },
+  "formats": {
+    "JPEG": 14805
+  },
+  "corrupted_images_count": 0,
+  "corrupted_images": [],
+  "duplicate_sets_count": 473,
+  "redundant_files_count": 705,
+  "dimension_statistics": {
+    "min_width": 202,
+    "max_width": 1920,
+    "mean_width": 587.9943262411348,
+    "median_width": 470.0,
+    "min_height": 176,
+    "max_height": 1080,
+    "mean_height": 545.9067882472137,
+    "median_height": 506.0,
+    "mean_aspect_ratio": 1.0163336710570754
+  }
+}

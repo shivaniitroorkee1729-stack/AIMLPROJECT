@@ -1,0 +1,33 @@
+# Python Bytecode & Cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+
+# Environments
+venv/
+env/
+.venv/
+ENV/
+
+# Large Dataset Directories (Explicitly required by project instructions)
+data/raw/
+data/processed/
+
+# Embedding caches (large binary arrays)
+*.npz
+
+# IDE & Editor Configs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS Artifacts
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs & Diagnostics
+*.log
