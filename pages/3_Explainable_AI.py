@@ -170,18 +170,18 @@ else:
     gradcam = get_gradcam_engine()
     explainer = get_natural_language_explainer()
 
-        # Generate overlay on the face crop
-        cmap_name = "jet" if "JET" in colormap_choice else "inferno"
-        crop_overlay = gradcam.overlay_heatmap(face_crop, heatmap, alpha=alpha_slider, colormap=cmap_name)
+    # Generate overlay on the face crop
+    cmap_name = "jet" if "JET" in colormap_choice else "inferno"
+    crop_overlay = gradcam.overlay_heatmap(face_crop, heatmap, alpha=alpha_slider, colormap=cmap_name)
 
-        # Generate overlay mapped strictly to the face bounding box in original image
-        orig_overlay = gradcam.overlay_heatmap_on_original(
-            original_img,
-            heatmap,
-            crop_bbox,
-            alpha=alpha_slider,
-            colormap=cmap_name,
-        )
+    # Generate overlay mapped strictly to the face bounding box in original image
+    orig_overlay = gradcam.overlay_heatmap_on_original(
+        original_img,
+        heatmap,
+        crop_bbox,
+        alpha=alpha_slider,
+        colormap=cmap_name,
+    )
 
     # Header Card for Prediction
     st.markdown(
