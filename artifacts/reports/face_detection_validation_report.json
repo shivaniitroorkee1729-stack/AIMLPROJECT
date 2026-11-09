@@ -1,0 +1,205 @@
+{
+  "timestamp": "2026-11-09 21:32:59",
+  "detector_configuration": {
+    "primary_detector": "OpenCV YuNet (face_detection_yunet_2023mar.onnx)",
+    "primary_score_threshold": 0.6,
+    "primary_nms_threshold": 0.35,
+    "verification_engine": "MediaPipe Face Landmarker (478 3D landmarks + 52 FACS blendshapes)",
+    "crop_verification_confidence": 0.25,
+    "padding_ratio": 0.22,
+    "exif_transposition": true,
+    "background_area_filter": "< 12% primary face area"
+  },
+  "overall_metrics": {
+    "total_images_tested": 315,
+    "single_face_detected": 315,
+    "overall_accuracy_pct": 100.0,
+    "zero_faces": 0,
+    "multiple_faces": 0,
+    "false_positive_rate_pct": 0.0,
+    "multi_face_rejection_rate_pct": 100.0,
+    "avg_latency_ms": 68.22
+  },
+  "per_class_results": {
+    "Shringara": {
+      "tested_samples": 35,
+      "single_face_detected": 35,
+      "zero_faces": 0,
+      "multi_faces": 0,
+      "accuracy_pct": 100.0,
+      "avg_confidence": 0.9324,
+      "avg_face_area_pct": 11.52,
+      "avg_latency_ms": 58.52
+    },
+    "Hasya": {
+      "tested_samples": 35,
+      "single_face_detected": 35,
+      "zero_faces": 0,
+      "multi_faces": 0,
+      "accuracy_pct": 100.0,
+      "avg_confidence": 0.9344,
+      "avg_face_area_pct": 12.2,
+      "avg_latency_ms": 53.33
+    },
+    "Karuna": {
+      "tested_samples": 35,
+      "single_face_detected": 35,
+      "zero_faces": 0,
+      "multi_faces": 0,
+      "accuracy_pct": 100.0,
+      "avg_confidence": 0.9363,
+      "avg_face_area_pct": 11.97,
+      "avg_latency_ms": 59.45
+    },
+    "Raudra": {
+      "tested_samples": 35,
+      "single_face_detected": 35,
+      "zero_faces": 0,
+      "multi_faces": 0,
+      "accuracy_pct": 100.0,
+      "avg_confidence": 0.9325,
+      "avg_face_area_pct": 7.36,
+      "avg_latency_ms": 57.31
+    },
+    "Veera": {
+      "tested_samples": 35,
+      "single_face_detected": 35,
+      "zero_faces": 0,
+      "multi_faces": 0,
+      "accuracy_pct": 100.0,
+      "avg_confidence": 0.9353,
+      "avg_face_area_pct": 6.87,
+      "avg_latency_ms": 107.36
+    },
+    "Bhayanaka": {
+      "tested_samples": 35,
+      "single_face_detected": 35,
+      "zero_faces": 0,
+      "multi_faces": 0,
+      "accuracy_pct": 100.0,
+      "avg_confidence": 0.9368,
+      "avg_face_area_pct": 9.46,
+      "avg_latency_ms": 66.98
+    },
+    "Bibhatsa": {
+      "tested_samples": 35,
+      "single_face_detected": 35,
+      "zero_faces": 0,
+      "multi_faces": 0,
+      "accuracy_pct": 100.0,
+      "avg_confidence": 0.9344,
+      "avg_face_area_pct": 7.67,
+      "avg_latency_ms": 74.52
+    },
+    "Adbhuta": {
+      "tested_samples": 35,
+      "single_face_detected": 35,
+      "zero_faces": 0,
+      "multi_faces": 0,
+      "accuracy_pct": 100.0,
+      "avg_confidence": 0.9366,
+      "avg_face_area_pct": 10.12,
+      "avg_latency_ms": 58.18
+    },
+    "Shanta": {
+      "tested_samples": 35,
+      "single_face_detected": 35,
+      "zero_faces": 0,
+      "multi_faces": 0,
+      "accuracy_pct": 100.0,
+      "avg_confidence": 0.9348,
+      "avg_face_area_pct": 6.04,
+      "avg_latency_ms": 78.36
+    }
+  },
+  "boundary_cases_results": [
+    {
+      "label": "Adbhuta Anita Babu 1080p",
+      "path": "data/processed/Adbhuta/train (26).jpg",
+      "status": "SINGLE_FACE",
+      "face_count": 1,
+      "passed": true,
+      "confidence": 0.9325,
+      "face_area_pct": 1.32,
+      "latency_ms": 212.76
+    },
+    {
+      "label": "Veera 1080p Medium Shot",
+      "path": "data/processed/Veera/train (10).jpg",
+      "status": "SINGLE_FACE",
+      "face_count": 1,
+      "passed": true,
+      "confidence": 0.938,
+      "face_area_pct": 1.52,
+      "latency_ms": 146.59
+    },
+    {
+      "label": "Shanta Mudra Hand Alta",
+      "path": "data/processed/Shanta/train (1000).jpg",
+      "status": "SINGLE_FACE",
+      "face_count": 1,
+      "passed": true,
+      "confidence": 0.931,
+      "face_area_pct": 5.59,
+      "latency_ms": 77.81
+    },
+    {
+      "label": "Shanta Background Artwork",
+      "path": "data/processed/Shanta/train (102).jpg",
+      "status": "SINGLE_FACE",
+      "face_count": 1,
+      "passed": true,
+      "confidence": 0.9401,
+      "face_area_pct": 1.66,
+      "latency_ms": 179.76
+    },
+    {
+      "label": "Bibhatsa Extreme Expression",
+      "path": "data/processed/Bibhatsa/train (100).jpg",
+      "status": "SINGLE_FACE",
+      "face_count": 1,
+      "passed": true,
+      "confidence": 0.9317,
+      "face_area_pct": 1.07,
+      "latency_ms": 224.8
+    }
+  ],
+  "non_human_rejection_results": [
+    {
+      "label": "Pure Black Canvas",
+      "status": "NO_FACE",
+      "face_count": 0,
+      "correctly_rejected": true
+    },
+    {
+      "label": "Pure White Canvas",
+      "status": "NO_FACE",
+      "face_count": 0,
+      "correctly_rejected": true
+    },
+    {
+      "label": "Neutral Gray Canvas",
+      "status": "NO_FACE",
+      "face_count": 0,
+      "correctly_rejected": true
+    },
+    {
+      "label": "Random RGB Noise",
+      "status": "NO_FACE",
+      "face_count": 0,
+      "correctly_rejected": true
+    },
+    {
+      "label": "Geometric Abstract Shapes",
+      "status": "NO_FACE",
+      "face_count": 0,
+      "correctly_rejected": true
+    },
+    {
+      "label": "Checkerboard Pattern",
+      "status": "NO_FACE",
+      "face_count": 0,
+      "correctly_rejected": true
+    }
+  ]
+}

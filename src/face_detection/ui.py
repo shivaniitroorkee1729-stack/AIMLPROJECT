@@ -51,8 +51,8 @@ def render_face_validation_card(input_image: Optional[Image.Image]) -> Optional[
         st.markdown(
             """
             <div style="background: #FFF3F3; border-left: 4px solid #D32F2F; padding: 12px 16px; border-radius: 6px; margin-bottom: 12px; font-size: 0.95rem; color: #5C1D1D;">
-                <b>Detection Policy:</b> The system requires a genuine, clearly visible human face before running CLIP, EfficientNet, Grad-CAM, or facial analysis. 
-                Images of animals, scenery, blank backgrounds, or obscured faces are rejected.
+                <b>Strict Face Policy:</b> The system requires a genuine, clearly visible human face before running CLIP, EfficientNet, Grad-CAM, or facial analysis. 
+                Images of non-human objects, animals, blank backgrounds, or obscured faces are strictly rejected.
             </div>
             """,
             unsafe_allow_html=True,
@@ -62,7 +62,12 @@ def render_face_validation_card(input_image: Optional[Image.Image]) -> Optional[
             st.image(res.original_image, caption="Uploaded Image (Rejected: 0 Human Faces)", use_container_width=True)
         with col_info:
             st.warning("⚠️ **All ML inference and explainability operations are locked.**")
-            st.info("💡 Please upload an image where the subject's face is clearly visible, upright, and reasonably lit.")
+            with st.expander("🛠️ Detection Diagnostics & Troubleshooting", expanded=True):
+                st.write(f"- **Image Dimensions:** {res.original_image.size[0]}×{res.original_image.size[1]} px")
+                st.write(f"- **Detected Human Faces:** `{res.face_count}`")
+                st.write(f"- **Detector Engine:** `{res.detector_used}`")
+                st.write(f"- **Detection Confidence:** `0.00%`")
+                st.info("💡 Ensure the face is clearly visible, upright, facing the camera, and reasonably illuminated.")
 
     elif res.status == FaceValidationStatus.MULTIPLE_FACES:
         st.error(f"⚠️ **{res.message}**")
@@ -70,7 +75,7 @@ def render_face_validation_card(input_image: Optional[Image.Image]) -> Optional[
             f"""
             <div style="background: #FFF8E1; border-left: 4px solid #FFA000; padding: 12px 16px; border-radius: 6px; margin-bottom: 12px; font-size: 0.95rem; color: #5C4300;">
                 <b>Multi-Face Ambiguity Detected:</b> Found <b>{res.face_count} human faces</b>. 
-                Navarasa expression analysis requires single-subject focus to prevent conflicting emotional cues.
+                Navarasa emotional classification requires single-subject focus to avoid ambiguous or conflicting emotional cues.
             </div>
             """,
             unsafe_allow_html=True,
@@ -84,11 +89,23 @@ def render_face_validation_card(input_image: Optional[Image.Image]) -> Optional[
                 caption=f"All {res.face_count} Detected Faces (Bounding Boxes)",
                 use_container_width=True,
             )
-        st.warning("⚠️ **Inference disabled until an image with exactly one human face is uploaded.**")
+        st.warning(f"⚠️ **Total Detected Faces: {res.face_count}**. Please upload an image containing exactly one human face.")
+        with st.expander("🛠️ Multi-Face Diagnostics", expanded=False):
+            st.write(f"- **Image Dimensions:** {res.original_image.size[0]}×{res.original_image.size[1]} px")
+            st.write(f"- **Detected Count:** `{res.face_count}`")
+            for idx, face in enumerate(res.detected_faces):
+                st.write(f"  - Face #{idx+1}: Box `[{face.bbox[0]}, {face.bbox[1]}, {face.bbox[2]}, {face.bbox[3]}]` | Conf: `{face.confidence*100:.1f}%` | Area: `{face.face_area_pct:.1f}%`")
 
     else:  # SINGLE_FACE
         st.success(f"✅ **{res.message}**")
-        
+
+        # Key Metrics Row
+        mcol1, mcol2, mcol3, mcol4 = st.columns(4)
+        mcol1.metric("Status", "Validated ✅")
+        mcol2.metric("Faces Detected", "1 (Single Face)")
+        mcol3.metric("Detection Confidence", f"{res.confidence * 100:.1f}%")
+        mcol4.metric("Face Area Share", f"{res.face_area_pct:.1f}%")
+
         # 3-Panel Visual Display
         col_orig, col_det, col_crop = st.columns(3)
         with col_orig:
@@ -100,10 +117,11 @@ def render_face_validation_card(input_image: Optional[Image.Image]) -> Optional[
             st.image(res.annotated_image, use_container_width=True)
             if res.crop_bbox:
                 bx1, by1, bx2, by2 = res.crop_bbox
-                st.caption(f"Face Box: [{bx1}, {by1}] → [{bx2}, {by2}]")
+                st.caption(f"Box: [{bx1}, {by1}] → [{bx2}, {by2}] | {res.detector_used}")
         with col_crop:
             st.markdown("##### 3. Extracted Facial Crop")
             st.image(res.face_crop, use_container_width=True)
-            st.caption(f"Extracted Crop: {res.face_crop.size[0]}×{res.face_crop.size[1]} px (Fed to ML/XAI)")
+            st.caption(f"Extracted Crop: {res.face_crop.size[0]}×{res.face_crop.size[1]} px (Fed to ML & XAI)")
 
     return res
+

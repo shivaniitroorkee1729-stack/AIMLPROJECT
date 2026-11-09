@@ -1,8 +1,8 @@
 """
 Strict Human Face Count and Geometry Validation Layer.
 Implements the mandatory 3-case validation logic:
-Case A: 0 faces -> Reject all ML/XAI processing.
-Case B: 1 face  -> Accept, extract proportional face crop, proceed to ML/XAI.
+Case A: 0 faces  -> Reject all ML/XAI processing.
+Case B: 1 face   -> Accept, extract proportional face crop, proceed to ML/XAI.
 Case C: 2+ faces -> Reject all ML/XAI processing, display all bounding boxes.
 """
 
@@ -13,7 +13,7 @@ from enum import Enum
 from pathlib import Path
 from typing import List, Tuple, Optional, Union
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageOps
 
 from src.face_detection.detector import HumanFaceDetector, DetectedFace
 from src.face_detection.face_crop import extract_face_crop, annotate_image_with_bboxes
@@ -38,6 +38,9 @@ class FaceValidationResult:
     crop_bbox: Optional[Tuple[int, int, int, int]]
     detected_faces: List[DetectedFace]
     image_hash: str
+    detector_used: str = "YuNet + MediaPipe Cascade"
+    confidence: float = 0.0
+    face_area_pct: float = 0.0
 
 
 # Module-level detector singleton and hash-based validation cache
@@ -61,7 +64,6 @@ def compute_image_hash(image_input: Union[Image.Image, np.ndarray, str, Path, by
         with open(image_input, "rb") as f:
             return hashlib.md5(f.read()).hexdigest()
     elif isinstance(image_input, Image.Image):
-        # Hash image dimensions and pixel byte buffer
         buf = io.BytesIO()
         image_input.save(buf, format="PNG")
         return hashlib.md5(buf.getvalue()).hexdigest()
@@ -99,13 +101,13 @@ def validate_face_image(
     if cache_key in _VALIDATION_CACHE:
         return _VALIDATION_CACHE[cache_key]
 
-    # Normalize image to RGB PIL Image
+    # Normalize image to RGB PIL Image with EXIF orientation correction
     if isinstance(image_input, bytes):
-        original_pil = Image.open(io.BytesIO(image_input)).convert("RGB")
+        original_pil = Image.open(io.BytesIO(image_input))
     elif isinstance(image_input, (str, Path)):
-        original_pil = Image.open(image_input).convert("RGB")
+        original_pil = Image.open(image_input)
     elif isinstance(image_input, Image.Image):
-        original_pil = image_input.convert("RGB")
+        original_pil = image_input.copy()
     elif isinstance(image_input, np.ndarray):
         if image_input.ndim == 2:
             original_pil = Image.fromarray(image_input).convert("RGB")
@@ -116,9 +118,14 @@ def validate_face_image(
     else:
         raise ValueError(f"Unsupported image input type: {type(image_input)}")
 
+    original_pil = ImageOps.exif_transpose(original_pil).convert("RGB")
+
     det = detector or get_detector()
     faces = det.detect_faces(original_pil)
     face_count = len(faces)
+
+    confidence = 0.0
+    area_pct = 0.0
 
     if face_count == 0:
         status = FaceValidationStatus.NO_FACE
@@ -140,6 +147,8 @@ def validate_face_image(
             square=True,
         )
         annotated_image = annotate_image_with_bboxes(original_pil, faces)
+        confidence = faces[0].confidence
+        area_pct = faces[0].face_area_pct
 
     else:  # face_count >= 2
         status = FaceValidationStatus.MULTIPLE_FACES
@@ -160,6 +169,8 @@ def validate_face_image(
         crop_bbox=crop_bbox,
         detected_faces=faces,
         image_hash=img_hash,
+        confidence=confidence,
+        face_area_pct=area_pct,
     )
 
     _VALIDATION_CACHE[cache_key] = result

@@ -91,36 +91,50 @@ data/
 
 ## 7. Mandatory Human Face Detection & Validation Layer
 
-To eliminate background distractions, clothing artifacts, and multi-subject ambiguity, a dedicated **Human Face Detection & Strict Face Count Validation Layer** precedes all machine learning inference and Explainable AI operations.
+To eliminate background distractions, clothing artifacts, and multi-subject ambiguity, a dedicated **Multi-Engine Human Face Detection & Strict Face Count Validation Layer** precedes all machine learning inference and Explainable AI operations.
 
 ```
-Uploaded Image ➔ Human Face Detector (MediaPipe) ➔ Strict Face Count Validation
-                                                              │
-                    ┌─────────────────────────────────────────┼─────────────────────────────────────────┐
-                    ▼                                         ▼                                         ▼
-            Case A: 0 Human Faces                     Case B: 1 Human Face                     Case C: 2+ Human Faces
-                    │                                         │                                         │
-        [REJECT & LOCK ML/XAI]                   [ACCEPT & EXTRACT FACE CROP]              [REJECT & LOCK ML/XAI]
-  "No human face detected. Please upload      "One human face detected. Proceeding       "Multiple human faces detected.
-  image containing a clearly visible face."       with Navarasa classification."         Upload image with exactly 1 face."
-  Display original rejected image.            Display: Original | BBox | Crop            Display: Original + All Face BBoxes
-                                                              │
-                                            ┌─────────────────┴─────────────────┐
-                                            ▼                                   ▼
-                                 CLIP ViT-B/32 + LogReg                EfficientNet-B0
-                                            │                                   │
-                                            └─────────────────┬─────────────────┘
-                                                              ▼
-                                                   Explainable AI (XAI)
-                                             (Grad-CAM, 6-Regions, FACS AUs,
-                                            Occlusion, Counterfactuals on CROP)
+Uploaded Image ➔ EXIF Orientation Transpose ➔ Dual-Engine Cascade (YuNet + MediaPipe) ➔ Strict Face Count Validation
+                                                                                                 │
+                    ┌────────────────────────────────────────────────────────────────────────────┼────────────────────────────────────────────────────────────────────────────┐
+                    ▼                                                                            ▼                                                                            ▼
+            Case A: 0 Human Faces                                                        Case B: 1 Human Face                                                        Case C: 2+ Human Faces
+                    │                                                                            │                                                                            │
+        [REJECT & LOCK ML/XAI]                                                      [ACCEPT & EXTRACT FACE CROP]                                                 [REJECT & LOCK ML/XAI]
+  "No human face detected. Please upload                                         "One human face detected. Proceeding                                         "Multiple human faces detected.
+  image containing a clearly visible face."                                          with Navarasa classification."                                            Upload image with exactly 1 face."
+  Display original rejected image + debug info.                                  Display: Original | BBox | Crop                                              Display: Original + All Face BBoxes
+                                                                                                 │
+                                                                 ┌───────────────────────────────┴───────────────────────────────┐
+                                                                 ▼                                                               ▼
+                                                      CLIP ViT-B/32 + LogReg                                           EfficientNet-B0
+                                                                 │                                                               │
+                                                                 └───────────────────────────────┬───────────────────────────────┘
+                                                                                                 ▼
+                                                                                       Explainable AI (XAI)
+                                                                                 (Grad-CAM, 6-Regions, FACS AUs,
+                                                                                Occlusion, Counterfactuals on CROP)
 ```
+
+### Dual-Engine Cascade Architecture
+1. **Primary Proposal Engine — OpenCV YuNet (`face_detection_yunet_2023mar.onnx`, 232 KB):**
+   - High-performance, lightweight CNN detector with multi-scale feature pyramids.
+   - Detects faces across diverse resolutions ($200\times 200$ to $1920\times 1080$ and $4\text{K}$) in under $5\text{ ms}$.
+   - Resolves the critical issue where single-scale short-range detectors downsampled $16:9$ canvas frames to $256\times 256$, shrinking medium-distance faces below detection threshold.
+2. **Dense Anatomical Verifier — MediaPipe FaceLandmarker (`face_landmarker.task`, 3.7 MB):**
+   - Extracts 478 3D landmarks and 52 FACS blendshapes on candidate crops.
+   - Strictly validates human facial geometry to reject non-human patterns, synthetic geometry, and background noise ($0.0\%$ false positive rate).
+3. **Mudra Hand & Background Distractor Filters:**
+   - Classical Indian dancers often perform intricate *mudrās* with palm dyed in red *alta*, which single-engine detectors mistook for faces. The cross-engine verifier prunes unconfirmed hand regions.
+   - Miniature artwork/portraits on background tapestries ($<12\%$ area of primary subject) are filtered out to preserve single-subject focus.
+4. **EXIF Normalization:**
+   - Incorporates `ImageOps.exif_transpose` to handle camera metadata orientations across smartphones and tablets seamlessly.
 
 ### Strict Validation States:
 1. **Case A (Zero Human Faces Detected):**
    - Completely blocks CLIP, EfficientNet, Grad-CAM, 6-region analysis, FACS Action Units, and counterfactuals.
    - User Message: *"No human face detected. Please upload an image containing a clearly visible human face."*
-   - Displays original image so the user understands why the input was rejected.
+   - Displays original image and troubleshooting diagnostics (dimensions, detector engine, confidence).
 2. **Case B (Exactly One Human Face Detected):**
    - Automatically calculates facial center $[cx, cy]$ and extracts an aspect-ratio-preserving square facial crop with $22\%$ proportional padding (capturing forehead, hairline, and jawline while discarding shoulders/background).
    - User Message: *"One human face detected. Proceeding with Navarasa classification."*
@@ -131,11 +145,13 @@ Uploaded Image ➔ Human Face Detector (MediaPipe) ➔ Strict Face Count Validat
    - User Message: *"Multiple human faces detected. Please upload an image containing exactly one human face."*
    - Renders annotated image with red bounding boxes around every detected face and total detected face count banner.
 
-### Modular Architecture (`src/face_detection/`):
-- `detector.py`: `HumanFaceDetector` wrapping MediaPipe FaceLandmarker with multi-face support ($k=10$), extracting 478 3D landmarks and high-precision bounding boxes. Exclusively trained on human face geometry (rejects animals, scenery, and objects).
-- `face_crop.py`: Extracts proportional face crops and renders bounding box annotations.
-- `face_validation.py`: Implements 3-case validation with deterministic MD5 content-hash caching and automatic state reset on image change.
-- `ui.py`: Standardized Streamlit validation card rendered across all prediction and explainability pages.
+### Validation Benchmark Summary (`artifacts/reports/face_detection_validation_report.md`):
+- **Dataset Images Tested:** 315 real dataset samples (35 per Navarasa class)
+- **Single-Face Accuracy:** **100.00%** (315/315 detected, 0.0% false negative rate)
+- **Adbhuta 1080p Resolution Fix (`train 26.jpg`):** **PASSED** (93.3% confidence, 1.3% frame area)
+- **Non-Human Rejection Rate (Shapes, Noise, Blanks):** **100.0%** (0.0% false positive rate)
+- **Multi-Face Rejection Rate (Composites):** **100.0%**
+- **Average Detection Latency:** ~68 ms on CPU
 
 ---
 

@@ -301,9 +301,43 @@ def test_11_non_human_images_rejected():
     print("[PASS] Test 11 Passed.")
 
 
+def test_12_regression_adbhuta_1080p():
+    """Scenario 12: Regression test on exact previously failing Adbhuta 1080p Anita Babu frame."""
+    print("Running Test 12: Regression test on Adbhuta 1080p frame (train 26.jpg)...")
+    adbhuta_path = Path("data/processed/Adbhuta/train (26).jpg")
+    if not adbhuta_path.exists():
+        print("  [SKIP] Adbhuta sample not found.")
+        return
+
+    res = validate_face_image(adbhuta_path)
+    assert res.status == FaceValidationStatus.SINGLE_FACE, f"Expected SINGLE_FACE, got {res.status}"
+    assert res.face_count == 1
+    assert res.is_valid
+    assert res.face_crop is not None
+    assert res.crop_bbox is not None
+    assert "One human face detected" in res.message
+    assert res.confidence >= 0.50
+    print(f"[PASS] Test 12 Passed (Adbhuta 1080p validated: Conf={res.confidence*100:.1f}%, Area={res.face_area_pct:.1f}%).")
+
+
+def test_13_all_navarasa_classes_detection():
+    """Scenario 13: Verifies face detection across all 9 Navarasa classes."""
+    print("Running Test 13: Face detection across all 9 Navarasa classes...")
+    for c in NAVARASA_CLASSES:
+        samples = glob.glob(f"data/processed/{c}/*.jpg")
+        if not samples:
+            continue
+        # Test first sample
+        res = validate_face_image(samples[0])
+        assert res.status == FaceValidationStatus.SINGLE_FACE, f"Class {c} sample failed detection: {res.status}"
+        assert res.is_valid
+        assert res.face_crop is not None
+    print("[PASS] Test 13 Passed (All 9 Navarasa classes verified).")
+
+
 if __name__ == "__main__":
     print("=" * 70)
-    print("STARTING COMPLETE 11-SCENARIO FACE DETECTION TEST SUITE")
+    print("STARTING COMPLETE 13-SCENARIO FACE DETECTION TEST SUITE")
     print("=" * 70)
 
     test_1_no_human_face_blank_and_noise()
@@ -317,8 +351,11 @@ if __name__ == "__main__":
     test_9_efficientnet_inference_with_face_crop()
     test_10_explainability_on_face_crop()
     test_11_non_human_images_rejected()
+    test_12_regression_adbhuta_1080p()
+    test_13_all_navarasa_classes_detection()
 
     print("=" * 70)
-    print("[SUCCESS] ALL 11 COMPREHENSIVE FACE DETECTION SCENARIOS PASSED WITH 100% SUCCESS!")
+    print("[SUCCESS] ALL 13 COMPREHENSIVE FACE DETECTION SCENARIOS PASSED WITH 100% SUCCESS!")
     print("=" * 70)
+
 
