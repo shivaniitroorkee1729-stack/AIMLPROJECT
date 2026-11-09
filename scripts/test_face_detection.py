@@ -390,17 +390,17 @@ A comprehensive benchmark was conducted across all 9 Navarasa classes, challengi
 flowchart TD
     A["Uploaded Image / Camera Stream"] --> B["EXIF Orientation Transposition (ImageOps.exif_transpose)"]
     B --> C["OpenCV YuNet Multi-Scale Detector (232 KB ONNX)"]
-    C --> D{"Faces Detected?"}
+    C --> D{{"Faces Detected?"}}
     D -- "0 Candidates" --> E["MediaPipe Global Fallback"]
     D -- ">= 1 Candidates" --> F["Extract Bounding Box Candidates + IoU NMS (0.35)"]
-    E --> G{"MediaPipe Candidates?"}
+    E --> G{{"MediaPipe Candidates?"}}
     G -- "None" --> H["CASE A: REJECT (0 Faces Detected)"]
     G -- ">= 1" --> F
     F --> I["Secondary Verification: MediaPipe FaceLandmarker on Candidate Crops"]
-    I --> J{"Valid 478 3D Landmarks & Dense Blendshapes?"}
+    I --> J{{"Valid 478 3D Landmarks & Dense Blendshapes?"}}
     J -- "No (Noise / Shape / Hand)" --> K["Prune Candidate"]
     J -- "Yes (Genuine Human Face)" --> L["Relative Area Filter (> 12% of Primary Face)"]
-    L --> M{"Filtered Face Count"}
+    L --> M{{"Filtered Face Count"}}
     M -- "0" --> H
     M -- "1" --> N["CASE B: ACCEPT (Extract Proportional Square Crop -> ML & XAI)"]
     M -- ">= 2" --> O["CASE C: REJECT (Multiple Faces Detected -> Block ML & XAI)"]
