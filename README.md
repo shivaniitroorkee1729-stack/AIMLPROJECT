@@ -89,7 +89,58 @@ data/
 
 ---
 
-## 7. Model Architectures
+## 7. Mandatory Human Face Detection & Validation Layer
+
+To eliminate background distractions, clothing artifacts, and multi-subject ambiguity, a dedicated **Human Face Detection & Strict Face Count Validation Layer** precedes all machine learning inference and Explainable AI operations.
+
+```
+Uploaded Image ➔ Human Face Detector (MediaPipe) ➔ Strict Face Count Validation
+                                                              │
+                    ┌─────────────────────────────────────────┼─────────────────────────────────────────┐
+                    ▼                                         ▼                                         ▼
+            Case A: 0 Human Faces                     Case B: 1 Human Face                     Case C: 2+ Human Faces
+                    │                                         │                                         │
+        [REJECT & LOCK ML/XAI]                   [ACCEPT & EXTRACT FACE CROP]              [REJECT & LOCK ML/XAI]
+  "No human face detected. Please upload      "One human face detected. Proceeding       "Multiple human faces detected.
+  image containing a clearly visible face."       with Navarasa classification."         Upload image with exactly 1 face."
+  Display original rejected image.            Display: Original | BBox | Crop            Display: Original + All Face BBoxes
+                                                              │
+                                            ┌─────────────────┴─────────────────┐
+                                            ▼                                   ▼
+                                 CLIP ViT-B/32 + LogReg                EfficientNet-B0
+                                            │                                   │
+                                            └─────────────────┬─────────────────┘
+                                                              ▼
+                                                   Explainable AI (XAI)
+                                             (Grad-CAM, 6-Regions, FACS AUs,
+                                            Occlusion, Counterfactuals on CROP)
+```
+
+### Strict Validation States:
+1. **Case A (Zero Human Faces Detected):**
+   - Completely blocks CLIP, EfficientNet, Grad-CAM, 6-region analysis, FACS Action Units, and counterfactuals.
+   - User Message: *"No human face detected. Please upload an image containing a clearly visible human face."*
+   - Displays original image so the user understands why the input was rejected.
+2. **Case B (Exactly One Human Face Detected):**
+   - Automatically calculates facial center $[cx, cy]$ and extracts an aspect-ratio-preserving square facial crop with $22\%$ proportional padding (capturing forehead, hairline, and jawline while discarding shoulders/background).
+   - User Message: *"One human face detected. Proceeding with Navarasa classification."*
+   - Displays 3-panel visual triad: (1) Original Image, (2) Detected Face with Bounding Box, (3) Extracted Facial Crop.
+   - Only this extracted facial crop is forwarded to CLIP, EfficientNet-B0, Grad-CAM, and FACS Action Unit extractors.
+3. **Case C (Two or More Human Faces Detected):**
+   - Blocks all ML/XAI pipelines to prevent conflicting emotional cues.
+   - User Message: *"Multiple human faces detected. Please upload an image containing exactly one human face."*
+   - Renders annotated image with red bounding boxes around every detected face and total detected face count banner.
+
+### Modular Architecture (`src/face_detection/`):
+- `detector.py`: `HumanFaceDetector` wrapping MediaPipe FaceLandmarker with multi-face support ($k=10$), extracting 478 3D landmarks and high-precision bounding boxes. Exclusively trained on human face geometry (rejects animals, scenery, and objects).
+- `face_crop.py`: Extracts proportional face crops and renders bounding box annotations.
+- `face_validation.py`: Implements 3-case validation with deterministic MD5 content-hash caching and automatic state reset on image change.
+- `ui.py`: Standardized Streamlit validation card rendered across all prediction and explainability pages.
+
+---
+
+## 8. Model Architectures
+
 
 ### Pipeline A: CLIP ViT-B/32 + Logistic Regression
 ```
@@ -111,7 +162,7 @@ Facial Image (224x224) ➔ EfficientNet-B0 ➔ Dropout(0.4) ➔ Linear(1280, 9) 
 
 ---
 
-## 8. Explainable AI (XAI) Suite
+## 9. Explainable AI (XAI) Suite
 
 ### 1. Exact Grad-CAM Visual Grounding
 Computes class-specific activation gradients with respect to the final convolutional feature maps:
@@ -144,7 +195,7 @@ Generates multi-paragraph clinical explanations synthesizing predicted sentiment
 
 ---
 
-## 9. Experimental Results & Benchmarks
+## 10. Experimental Results & Benchmarks
 
 ### Held-Out Test Set Performance (2,115 Unseen Images):
 | Model Pipeline | Test Accuracy | Macro Precision | Macro Recall | Macro F1-Score | Weighted F1-Score |
@@ -176,7 +227,7 @@ Fixed validation and test sets; evaluated across training sample increments:
 
 ---
 
-## 10. Installation & Local Execution
+## 11. Installation & Local Execution
 
 ### 1. Clone the Repository
 ```bash
@@ -196,7 +247,12 @@ pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-### 3. Run the Web Application
+### 3. Run the Automated Test Suite
+```bash
+python tests/test_face_detection.py
+```
+
+### 4. Run the Web Application
 ```bash
 streamlit run app.py
 ```
@@ -204,19 +260,19 @@ The browser will automatically launch at `http://localhost:8501`.
 
 ---
 
-## 11. Web Application Pages
+## 12. Web Application Pages
 - **Home / Introduction (`app.py`):** Philosophical overview, 9 Navarasa aesthetic cards, architecture diagrams.
 - **1. Dataset Explorer (`pages/1_Dataset_Explorer.py`):** Class distributions, split stats, sample gallery.
-- **2. Navarasa Prediction (`pages/2_Prediction.py`):** Single & dual-model classification with probability distributions.
-- **3. Explainable AI (`pages/3_Explainable_AI.py`):** Grad-CAM heatmaps, overlays, 6-region energy percentages.
-- **4. Facial Analysis (`pages/4_Facial_Analysis.py`):** 478-point mesh, 6 regions, FACS AUs, top-2 class contrast.
-- **5. Occlusion & Counterfactuals (`pages/5_Occlusion_Counterfactual.py`):** Sensitivity masking, counterfactual adjustments.
+- **2. Navarasa Prediction (`pages/2_Prediction.py`):** Mandatory face validation, single & dual-model classification on facial crop with probability distributions.
+- **3. Explainable AI (`pages/3_Explainable_AI.py`):** Crop-exclusive Grad-CAM heatmaps, overlays, 6-region energy percentages.
+- **4. Facial Analysis (`pages/4_Facial_Analysis.py`):** 478-point mesh, 6 regions, FACS AUs, top-2 class contrast on facial crop.
+- **5. Occlusion & Counterfactuals (`pages/5_Occlusion_Counterfactual.py`):** Sensitivity masking, counterfactual adjustments on facial crop.
 - **6. Model Performance (`pages/6_Model_Performance.py`):** Test benchmarks, confusion matrices, scaling plots.
 - **7. About & Methodology (`pages/7_About_Methodology.py`):** Theoretical framework, math formulations, limitations.
 
 ---
 
-## 12. Deployment Instructions
+## 13. Deployment Instructions
 
 ### Deployment to Streamlit Community Cloud:
 1. Fork or push this repository to GitHub (`shivaniitroorkee1729-stack/AIMLPROJECT`).
@@ -226,13 +282,14 @@ The browser will automatically launch at `http://localhost:8501`.
 
 ---
 
-## 13. Limitations & Future Scope
+## 14. Limitations & Future Scope
 - **Expressive Stylization vs Natural Affect:** The models predict stylized categorical facial patterns from Indian classical performance. They do not diagnose genuine internal psychological emotional states.
-- **Lighting & Pose Sensitivity:** Landmark and Action Unit extraction relies on clear facial visibility and degrades under severe off-angle poses.
+- **Extreme Lighting & Angles:** Landmark and Action Unit extraction relies on human facial geometry and cleanly rejects images where authentic human facial features cannot be resolved.
 - **Future Work:** Extension to continuous valence-arousal space, video-stream temporal attention for Indian classical dance performances, and multi-modal audio-visual Rasa synthesis.
 
 ---
 
-## 14. Repository & Authorship
+## 15. Repository & Authorship
 - **GitHub Repository:** [https://github.com/shivaniitroorkee1729-stack/AIMLPROJECT](https://github.com/shivaniitroorkee1729-stack/AIMLPROJECT)
 - **Author / Maintainer:** `shivaniitroorkee1729-stack`
+

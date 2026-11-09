@@ -1,5 +1,6 @@
 """
 Page 3: Explainable AI — Exact Grad-CAM Visual Grounding & Facial Region Energy Analysis
+Enforces Human Face Detection and Face Crop Restriction before computing heatmaps.
 """
 
 import sys
@@ -7,6 +8,7 @@ from pathlib import Path
 import streamlit as st
 import numpy as np
 from PIL import Image
+import matplotlib.pyplot as plt
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 from config.settings import NAVARASA_CLASSES, RASA_DESCRIPTIONS, PROCESSED_DATA_DIR, CLASS_TO_IDX
@@ -23,6 +25,7 @@ from src.models.model_loader import (
     get_au_extractor,
 )
 from src.data.preprocessing import get_efficientnet_transforms
+from src.face_detection import render_face_validation_card
 
 st.set_page_config(page_title="Explainable AI — NAVARASA AI", page_icon="🔍", layout="wide")
 st.markdown(get_custom_css(), unsafe_allow_html=True)
@@ -34,7 +37,7 @@ st.markdown(
         <h1 style="margin-top: 10px;">Grad-CAM & Facial Region Importance</h1>
         <p style="opacity: 0.95; font-size: 1.05rem;">
             Calculates exact gradient-weighted class activations from the final convolutional stage of EfficientNet-B0,
-            overlaying neural attention on the facial anatomy and computing proportional energy across six anatomical regions.
+            strictly restricted to the validated facial crop, overlaying neural attention on the facial anatomy.
         </p>
     </div>
     """,
@@ -58,7 +61,7 @@ col_upload, col_ctrl = st.columns([1.2, 1])
 input_image = None
 
 with col_upload:
-    uploaded = st.file_uploader("Upload Facial Image (JPG / PNG):", type=["jpg", "jpeg", "png"])
+    uploaded = st.file_uploader("Upload Image (JPG / PNG):", type=["jpg", "jpeg", "png"])
     if uploaded is not None:
         input_image = Image.open(uploaded).convert("RGB")
     elif quick_sample != "None":
@@ -76,9 +79,21 @@ with col_ctrl:
         index=0
     )
 
-if input_image is not None:
+# Strict Human Face Validation Layer
+validation_res = render_face_validation_card(input_image)
+
+if validation_res is None:
+    st.info("Please upload an image or pick an authentic sample from the sidebar.")
+elif not validation_res.is_valid:
+    # All XAI processing is blocked by design
+    pass
+else:
+    face_crop = validation_res.face_crop
+    original_img = validation_res.original_image
+    crop_bbox = validation_res.crop_bbox
+
     st.markdown("---")
-    with st.spinner("Computing convolutional activations and backpropagating gradients..."):
+    with st.spinner("Computing convolutional activations strictly on facial crop..."):
         # Load engines
         eff_model = get_efficientnet_model()
         gradcam = get_gradcam_engine()
@@ -86,11 +101,11 @@ if input_image is not None:
         au_extractor = get_au_extractor()
         explainer = get_natural_language_explainer()
 
-        # Transform image
+        # Transform face crop to tensor
         transform = get_efficientnet_transforms(is_training=False)
-        tensor = transform(input_image).unsqueeze(0)
+        tensor = transform(face_crop).unsqueeze(0)
 
-        # Base prediction
+        # Base prediction on face crop
         probs = eff_model.predict_probabilities(tensor)[0].cpu().numpy()
         pred_idx = int(np.argmax(probs))
         pred_class = NAVARASA_CLASSES[pred_idx]
@@ -104,20 +119,29 @@ if input_image is not None:
             cam_class_idx = CLASS_TO_IDX[target_class_choice]
             cam_class_name = target_class_choice
 
-        # Generate exact Grad-CAM heatmap
+        # Generate exact Grad-CAM heatmap on the face crop
         heatmap, _, _ = gradcam.generate_heatmap(tensor, target_class_idx=cam_class_idx)
 
-        # Generate overlay
+        # Generate overlay on the face crop
         cmap_name = "jet" if "JET" in colormap_choice else "inferno"
-        overlay = gradcam.overlay_heatmap(input_image, heatmap, alpha=alpha_slider, colormap=cmap_name)
+        crop_overlay = gradcam.overlay_heatmap(face_crop, heatmap, alpha=alpha_slider, colormap=cmap_name)
 
-        # Extract landmarks and 6-region masks
-        landmarks, det_result = facial_analyzer.extract_landmarks(input_image)
-        masks = facial_analyzer.generate_region_masks(np.array(input_image).shape, landmarks)
+        # Generate overlay mapped strictly to the face bounding box in original image
+        orig_overlay = gradcam.overlay_heatmap_on_original(
+            original_img,
+            heatmap,
+            crop_bbox,
+            alpha=alpha_slider,
+            colormap=cmap_name,
+        )
+
+        # Extract landmarks and 6-region masks from the facial crop
+        landmarks, det_result = facial_analyzer.extract_landmarks(face_crop)
+        masks = facial_analyzer.generate_region_masks(np.array(face_crop).shape, landmarks)
         region_pcts, sorted_regions = facial_analyzer.calculate_region_importance(heatmap, masks)
 
-        # Extract AUs
-        aus, face_ok = au_extractor.extract_action_units(input_image)
+        # Extract AUs from the facial crop
+        aus, face_ok = au_extractor.extract_action_units(face_crop)
         active_aus = [au for au in aus.values() if au["is_active"]]
 
     # Header Card for Prediction
@@ -137,20 +161,31 @@ if input_image is not None:
         unsafe_allow_html=True,
     )
 
-    # Visual Triad: Original, Heatmap, Overlay
-    col_orig, col_cam, col_over = st.columns(3)
-    with col_orig:
-        st.markdown("#### 1. Input Image")
-        st.image(input_image, use_container_width=True)
-    with col_cam:
-        st.markdown(f"#### 2. Raw Grad-CAM ({cam_class_name})")
-        import matplotlib.pyplot as plt
+    # Visual Triad for Facial Crop: Crop, Raw Heatmap, Crop Overlay
+    st.markdown("### 🎯 Facial Crop Grad-CAM Visual Grounding")
+    st.caption("All gradient backpropagation operates strictly inside the facial boundary — no background, neck, or clothing artifacts.")
+    c_crop, c_cam, c_over = st.columns(3)
+    with c_crop:
+        st.markdown("#### 1. Extracted Face Crop")
+        st.image(face_crop, use_container_width=True)
+    with c_cam:
+        st.markdown(f"#### 2. Raw Facial Heatmap ({cam_class_name})")
         cmap_fn = plt.colormaps[cmap_name] if hasattr(plt, "colormaps") else plt.cm.get_cmap(cmap_name)
         cam_vis_colored = (cmap_fn(heatmap)[:, :, :3] * 255).astype(np.uint8)
         st.image(cam_vis_colored, use_container_width=True)
-    with col_over:
-        st.markdown("#### 3. Overlay Grounding")
-        st.image(overlay, use_container_width=True)
+    with c_over:
+        st.markdown("#### 3. Facial Crop Overlay")
+        st.image(crop_overlay, use_container_width=True)
+
+    # Full Context Localization Comparison
+    st.markdown("---")
+    st.markdown("### 📍 Bounding Box Localized Attention in Full Context")
+    st.caption("Heatmap is projected cleanly back into the validated face bounding box. Notice surrounding background and clothing are untouched.")
+    c_full_orig, c_full_over = st.columns(2)
+    with c_full_orig:
+        st.image(validation_res.annotated_image, caption="Original with Detected Face BBox", use_container_width=True)
+    with c_full_over:
+        st.image(orig_overlay, caption="Original with Face-Constrained Grad-CAM", use_container_width=True)
 
     st.markdown("---")
 
@@ -188,5 +223,3 @@ if input_image is not None:
         active_action_units=active_aus,
     )
     st.markdown(explanation_text)
-else:
-    st.info("Please upload a facial image or pick an authentic sample from the sidebar.")

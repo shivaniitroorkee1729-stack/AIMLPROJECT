@@ -1,8 +1,10 @@
 """
 Integration tests for inference pipelines and dual-model comparison.
+Uses authentic dataset face images to verify end-to-end inference.
 """
 
 import sys
+import glob
 from pathlib import Path
 from PIL import Image
 
@@ -11,9 +13,16 @@ from config.settings import NAVARASA_CLASSES
 from src.models.inference import predict_clip, predict_efficientnet, predict_dual_models
 
 
+def get_face_img():
+    samples = glob.glob("data/processed/*/*.jpg")
+    if samples:
+        return Image.open(samples[0]).convert("RGB")
+    return Image.new("RGB", (224, 224), color=(180, 120, 80))
+
+
 def test_clip_prediction():
-    dummy_img = Image.new("RGB", (224, 224), color=(180, 120, 80))
-    res = predict_clip(dummy_img)
+    face_img = get_face_img()
+    res = predict_clip(face_img, enforce_face_crop=True)
 
     assert "predicted_class" in res
     assert res["predicted_class"] in NAVARASA_CLASSES
@@ -24,8 +33,8 @@ def test_clip_prediction():
 
 
 def test_efficientnet_prediction():
-    dummy_img = Image.new("RGB", (224, 224), color=(100, 160, 200))
-    res = predict_efficientnet(dummy_img)
+    face_img = get_face_img()
+    res = predict_efficientnet(face_img, enforce_face_crop=True)
 
     assert "predicted_class" in res
     assert res["predicted_class"] in NAVARASA_CLASSES
@@ -36,8 +45,8 @@ def test_efficientnet_prediction():
 
 
 def test_dual_model_prediction():
-    dummy_img = Image.new("RGB", (224, 224), color=(220, 150, 110))
-    res = predict_dual_models(dummy_img)
+    face_img = get_face_img()
+    res = predict_dual_models(face_img, enforce_face_crop=True)
 
     assert "clip" in res
     assert "efficientnet" in res

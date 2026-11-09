@@ -54,53 +54,47 @@ with st.sidebar:
         index=0
     )
 
+from src.face_detection import render_face_validation_card
+
 # Upload and Image Selection Area
-col_input, col_preview = st.columns([1, 1])
+st.markdown("### 1. Select or Upload Image")
+col_upload, col_sample = st.columns([1.2, 1])
 
 uploaded_file = None
 input_image = None
 
-with col_input:
-    st.markdown("### 1. Upload Facial Image")
+with col_upload:
     uploaded_file = st.file_uploader(
-        "Choose a JPG, JPEG, or PNG image:",
+        "Upload image (JPG, JPEG, PNG):",
         type=["jpg", "jpeg", "png"]
     )
 
+with col_sample:
     if quick_sample != "None" and uploaded_file is None:
         cls_dir = PROCESSED_DATA_DIR / quick_sample
         samples = list(cls_dir.glob("*.jpg"))
         if samples:
             sample_path = samples[len(samples) // 3]  # Pick a clean sample
             input_image = Image.open(sample_path).convert("RGB")
-            st.info(f"Loaded sample image from **{quick_sample}** class.")
+            st.info(f"Loaded authentic sample from **{quick_sample}** dataset class.")
 
-    if uploaded_file is not None:
-        input_image = Image.open(uploaded_file).convert("RGB")
+if uploaded_file is not None:
+    input_image = Image.open(uploaded_file).convert("RGB")
 
-with col_preview:
-    st.markdown("### 2. Image Preview")
-    if input_image is not None:
-        st.image(input_image, caption="Uploaded Facial Image", use_container_width=True)
-    else:
-        st.markdown(
-            f"""
-            <div style="background: #FFFFFF; border: 2px dashed {THEME['border_gold']}; border-radius: 12px; height: 260px; display: flex; align-items: center; justify-content: center; color: {THEME['text_muted']};">
-                Upload an image or pick a sample from the sidebar to preview
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+# Strict Face Detection & Validation Layer
+validation_res = render_face_validation_card(input_image)
 
-# Run Prediction Button
-if input_image is not None:
+# Run Prediction only if exactly one human face is validated
+if validation_res is not None and validation_res.is_valid:
+    face_crop = validation_res.face_crop
     st.markdown("---")
     if st.button("🚀 Classify Navarasa Facial Expression", use_container_width=True):
-        with st.spinner("Executing neural inference..."):
+        with st.spinner("Executing neural inference on validated facial crop..."):
             if model_choice == "Dual-Model Comparison (Simultaneous)":
-                res = predict_dual_models(input_image)
+                res = predict_dual_models(face_crop, enforce_face_crop=False)
                 clip_res = res["clip"]
                 eff_res = res["efficientnet"]
+
 
                 # Agreement Banner
                 if res["agreement"]:
@@ -162,7 +156,7 @@ if input_image is not None:
                 st.pyplot(fig_dual)
 
             elif model_choice == "EfficientNet-B0 (Fine-Tuned)":
-                res = predict_efficientnet(input_image)
+                res = predict_efficientnet(face_crop, enforce_face_crop=False)
                 meta = res["description"]
 
                 st.markdown(
@@ -195,7 +189,7 @@ if input_image is not None:
                     st.pyplot(fig_bars)
 
             else:  # CLIP + Logistic Regression
-                res = predict_clip(input_image)
+                res = predict_clip(face_crop, enforce_face_crop=False)
                 meta = res["description"]
 
                 st.markdown(

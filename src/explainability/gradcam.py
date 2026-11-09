@@ -148,7 +148,38 @@ class GradCAM:
             cmap_name = "inferno" if (isinstance(colormap, str) and "inferno" in colormap.lower()) else "jet"
             cmap_fn = plt.colormaps[cmap_name] if hasattr(plt, "colormaps") else plt.cm.get_cmap(cmap_name)
             heatmap_rgba = cmap_fn(resized_cam)
-            heatmap_rgb = (heatmap_rgba[:, :, :3] * 255).astype(np.uint8)
-
             blended = (rgb_img.astype(float) * (1.0 - alpha) + heatmap_rgb.astype(float) * alpha).clip(0, 255).astype(np.uint8)
             return blended
+
+    def overlay_heatmap_on_original(
+        self,
+        original_image,
+        face_crop_heatmap,
+        crop_bbox,
+        alpha=0.55,
+        colormap="jet"
+    ):
+        """
+        Maps a face-crop Grad-CAM heatmap back strictly onto the face bounding box in the original image.
+        Surrounding background, body, and clothing remain pristine with zero false activation.
+        """
+        if isinstance(original_image, Image.Image):
+            base_img = original_image.copy().convert("RGB")
+        else:
+            base_img = Image.fromarray(original_image).convert("RGB")
+
+        x1, y1, x2, y2 = crop_bbox
+        bw = x2 - x1
+        bh = y2 - y1
+        if bw <= 0 or bh <= 0:
+            return np.array(base_img)
+
+        # Extract crop from original image
+        crop_pil = base_img.crop((x1, y1, x2, y2))
+        crop_overlay = self.overlay_heatmap(crop_pil, face_crop_heatmap, alpha=alpha, colormap=colormap)
+        crop_overlay_pil = Image.fromarray(crop_overlay)
+
+        # Paste overlaid crop back into original image at exact crop_bbox
+        base_img.paste(crop_overlay_pil, (x1, y1))
+        return np.array(base_img)
+

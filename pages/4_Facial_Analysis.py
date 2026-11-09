@@ -1,6 +1,7 @@
 """
 Page 4: Facial Analysis — MediaPipe Face Mesh, 6 Anatomical Regions,
 FACS Action Unit Extraction, and Top-Two Class Comparative Contrast.
+Enforces Human Face Detection and Face Crop Restriction before processing.
 """
 
 import sys
@@ -10,7 +11,7 @@ import numpy as np
 from PIL import Image
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
-from config.settings import NAVARASA_CLASSES, RASA_DESCRIPTIONS, PROCESSED_DATA_DIR
+from config.settings import NAVARASA_CLASSES, RASA_DESCRIPTIONS, PROCESSED_DATA_DIR, CLASS_TO_IDX
 from src.utils.visualization import (
     get_custom_css,
     THEME,
@@ -24,6 +25,7 @@ from src.models.model_loader import (
     get_top_two_comparator,
 )
 from src.data.preprocessing import get_efficientnet_transforms
+from src.face_detection import render_face_validation_card
 
 st.set_page_config(page_title="Facial Analysis — NAVARASA AI", page_icon="🧬", layout="wide")
 st.markdown(get_custom_css(), unsafe_allow_html=True)
@@ -35,7 +37,7 @@ st.markdown(
         <h1 style="margin-top: 10px;">Facial Analysis & Top-Two Class Comparison</h1>
         <p style="opacity: 0.95; font-size: 1.05rem;">
             Dense 478-point facial mesh mapping, six-region anatomical segmentation,
-            FACS Action Unit muscular measurement, and contrastive analysis between competing predictions.
+            FACS Action Unit muscular measurement, and contrastive analysis strictly executed on the validated face crop.
         </p>
     </div>
     """,
@@ -54,7 +56,7 @@ col_up, col_info = st.columns([1.2, 1])
 input_image = None
 
 with col_up:
-    uploaded = st.file_uploader("Upload Facial Image (JPG / PNG):", type=["jpg", "jpeg", "png"])
+    uploaded = st.file_uploader("Upload Image (JPG / PNG):", type=["jpg", "jpeg", "png"])
     if uploaded is not None:
         input_image = Image.open(uploaded).convert("RGB")
     elif quick_sample != "None":
@@ -72,33 +74,42 @@ with col_info:
             <p style="font-size: 0.85rem; color: {THEME['text_muted']};">
                 The Facial Action Coding System (FACS) decomposes facial expressions into individual 
                 anatomical muscle contractions called <b>Action Units (AUs)</b>. 
-                Our system extracts measured blendshape coefficients directly from facial geometry.
+                Our system extracts measured blendshape coefficients directly from the validated facial crop.
             </p>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
-if input_image is not None:
+# Strict Human Face Validation Layer
+validation_res = render_face_validation_card(input_image)
+
+if validation_res is None:
+    st.info("Please upload an image or pick an authentic sample from the sidebar.")
+elif not validation_res.is_valid:
+    pass
+else:
+    face_crop = validation_res.face_crop
+
     st.markdown("---")
-    with st.spinner("Analyzing facial geometry and muscular action units..."):
+    with st.spinner("Analyzing facial geometry and muscular action units on facial crop..."):
         facial_analyzer = get_facial_analyzer()
         au_extractor = get_au_extractor()
         eff_model = get_efficientnet_model()
         gradcam = get_gradcam_engine()
         comparator = get_top_two_comparator()
 
-        # 1. Landmarks & Masks
-        landmarks, det_result = facial_analyzer.extract_landmarks(input_image)
-        masks = facial_analyzer.generate_region_masks(np.array(input_image).shape, landmarks)
-        annotated_img = facial_analyzer.draw_landmarks_and_regions(input_image, landmarks, masks)
+        # 1. Landmarks & Masks strictly on facial crop
+        landmarks, det_result = facial_analyzer.extract_landmarks(face_crop)
+        masks = facial_analyzer.generate_region_masks(np.array(face_crop).shape, landmarks)
+        annotated_crop = facial_analyzer.draw_landmarks_and_regions(face_crop, landmarks, masks)
 
-        # 2. Action Units
-        aus, face_detected = au_extractor.extract_action_units(input_image)
+        # 2. Action Units strictly from facial crop
+        aus, face_detected = au_extractor.extract_action_units(face_crop)
 
-        # 3. Model Inference & Grad-CAM for Top Two
+        # 3. Model Inference & Grad-CAM for Top Two on facial crop
         transform = get_efficientnet_transforms(is_training=False)
-        tensor = transform(input_image).unsqueeze(0)
+        tensor = transform(face_crop).unsqueeze(0)
         probs = eff_model.predict_probabilities(tensor)[0].cpu().numpy()
         prob_dict = {cls: float(probs[i]) for i, cls in enumerate(NAVARASA_CLASSES)}
 
@@ -107,7 +118,6 @@ if input_image is not None:
         top2_cls, top2_prob = sorted_probs[1]
 
         # Grad-CAM for Top 1 and Top 2
-        from config.settings import CLASS_TO_IDX
         cam1, _, _ = gradcam.generate_heatmap(tensor, target_class_idx=CLASS_TO_IDX[top1_cls])
         cam2, _, _ = gradcam.generate_heatmap(tensor, target_class_idx=CLASS_TO_IDX[top2_cls])
 
@@ -126,7 +136,7 @@ if input_image is not None:
         st.markdown("### Facial Landmark Mesh and 6 Anatomical Region Boundaries")
         col_m1, col_m2 = st.columns([1, 1.2])
         with col_m1:
-            st.image(annotated_img, caption="Face Mesh & Region Contours", use_container_width=True)
+            st.image(annotated_crop, caption="Face Crop Mesh & Region Contours", use_container_width=True)
         with col_m2:
             st.markdown("#### Anatomical Region Segmentations")
             st.markdown(
@@ -139,7 +149,7 @@ if input_image is not None:
                 - 🟣 **Forehead:** Superior frontal cranium above supraorbital ridge
                 """
             )
-            st.info(f"Detected **{len(landmarks)}** 3D landmark coordinates.")
+            st.info(f"Detected **{len(landmarks)}** 3D landmark coordinates inside validated facial crop.")
 
     with tab_au:
         st.markdown("### Measured Facial Action Units (FACS)")
@@ -158,59 +168,35 @@ if input_image is not None:
                 "Muscle Group": meta["muscle"],
                 "Intensity": f"{meta['intensity']:.2f}",
                 "Status": "ACTIVE" if meta["is_active"] else "Inactive",
-                "Indicative Rasas": ", ".join(meta["relevant_rasas"]),
+                "Associated Rasas": ", ".join(meta["relevant_rasas"]),
             })
-        st.dataframe(au_table, use_container_width=True, hide_index=True)
+        st.dataframe(au_table, use_container_width=True)
 
     with tab_top2:
-        st.markdown("### Top-Two Competing Navarasa Predictions")
+        st.markdown("### Contrastive Analysis Between Top Two Competing Rasas")
         st.markdown(
             f"""
-            <div class="navarasa-card" style="border-left: 5px solid {THEME['deep_green']};">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <h3>1st: {top1_cls} ({top1_prob * 100:.1f}%) &nbsp; vs &nbsp; 2nd: {top2_cls} ({top2_prob * 100:.1f}%)</h3>
-                    <span class="badge-gold">{top2_report['margin_status']} (Margin: {top2_report['probability_margin'] * 100:.1f}%)</span>
-                </div>
+            <div class="navarasa-card">
+                <h3>Top-Two Probability Margin: <b>{top2_report['margin'] * 100:.1f}%</b></h3>
+                <p>
+                    Primary Candidate: <b>{top1_cls}</b> ({top1_prob * 100:.1f}%) &bull; 
+                    Secondary Competitor: <b>{top2_cls}</b> ({top2_prob * 100:.1f}%)
+                </p>
+                <p style="font-size: 0.95rem; color: {THEME['text_dark']};">
+                    {top2_report['summary']}
+                </p>
             </div>
             """,
             unsafe_allow_html=True,
         )
 
-        c_t1, c_t2 = st.columns(2)
-        with c_t1:
-            st.markdown(f"#### Primary: {top1_cls}")
-            st.write(f"**Meaning:** {top2_report['top1_meaning']}")
-            st.markdown("##### Regions Favoring This Prediction:")
-            if top2_report["regions_favoring_top1"]:
-                for r in top2_report["regions_favoring_top1"]:
-                    diff = top2_report["region_differences"][r]
-                    st.write(f"- **{r}**: +{diff:.1f}% higher attention")
-            else:
-                st.write("Diffused regional attention.")
-
-            st.markdown("##### Corroborating Active AUs:")
-            if top2_report["active_aus_top1"]:
-                for au in top2_report["active_aus_top1"]:
-                    st.write(f"- **{au['id']}** ({au['name']}): intensity {au['intensity']:.2f}")
-            else:
-                st.write("None active above threshold.")
-
-        with c_t2:
-            st.markdown(f"#### Alternative: {top2_cls}")
-            st.write(f"**Meaning:** {top2_report['top2_meaning']}")
-            st.markdown("##### Regions Favoring This Alternative:")
-            if top2_report["regions_favoring_top2"]:
-                for r in top2_report["regions_favoring_top2"]:
-                    diff = abs(top2_report["region_differences"][r])
-                    st.write(f"- **{r}**: +{diff:.1f}% higher attention when explaining {top2_cls}")
-            else:
-                st.write("No distinct regional advantage.")
-
-            st.markdown("##### Corroborating Active AUs:")
-            if top2_report["active_aus_top2"]:
-                for au in top2_report["active_aus_top2"]:
-                    st.write(f"- **{au['id']}** ({au['name']}): intensity {au['intensity']:.2f}")
-            else:
-                st.write("None active above threshold.")
-else:
-    st.info("Please upload a facial image or pick an authentic sample from the sidebar.")
+        st.markdown("#### Anatomical Region Activation Differential (Primary vs Competitor)")
+        col_c1, col_c2 = st.columns(2)
+        with col_c1:
+            st.markdown(f"**{top1_cls} (Primary) Region Activation:**")
+            for r, v in sorted(reg_pcts1.items(), key=lambda x: x[1], reverse=True):
+                st.write(f"- {r}: {v:.1f}%")
+        with col_c2:
+            st.markdown(f"**{top2_cls} (Competitor) Region Activation:**")
+            for r, v in sorted(reg_pcts2.items(), key=lambda x: x[1], reverse=True):
+                st.write(f"- {r}: {v:.1f}%")
