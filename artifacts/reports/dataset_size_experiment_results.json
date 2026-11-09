@@ -1,42 +1,102 @@
-[
-  {
-    "size_setting": "50",
-    "samples_per_class": 50,
-    "total_training_samples": 450,
-    "test_accuracy": 0.5035460992907801,
-    "test_macro_f1": 0.5033436518196647,
-    "test_weighted_f1": 0.5059098414749998,
-    "test_macro_precision": 0.5169352528201778,
-    "test_macro_recall": 0.5025963033597747
-  },
-  {
-    "size_setting": "100",
-    "samples_per_class": 100,
-    "total_training_samples": 900,
-    "test_accuracy": 0.577304964539007,
-    "test_macro_f1": 0.5720362447484488,
-    "test_weighted_f1": 0.5741158168938811,
-    "test_macro_precision": 0.5790597646748891,
-    "test_macro_recall": 0.5735649512777481
-  },
-  {
-    "size_setting": "200",
-    "samples_per_class": 200,
-    "total_training_samples": 1800,
-    "test_accuracy": 0.7030732860520095,
-    "test_macro_f1": 0.6988803121439213,
-    "test_weighted_f1": 0.7022075470564086,
-    "test_macro_precision": 0.704161113587837,
-    "test_macro_recall": 0.699929802790472
-  },
-  {
-    "size_setting": "Full",
-    "samples_per_class": 1097,
-    "total_training_samples": 9870,
-    "test_accuracy": 0.9073286052009456,
-    "test_macro_f1": 0.9064443778574708,
-    "test_weighted_f1": 0.9070870522088813,
-    "test_macro_precision": 0.9067855493013197,
-    "test_macro_recall": 0.9067837931481066
-  }
-]
+{
+  "logreg": [
+    {
+      "size_setting": "50",
+      "samples_per_class": 50,
+      "total_training_samples": 450,
+      "train_time_seconds": 0.116,
+      "val_accuracy": 0.8168480832938949,
+      "test_accuracy": 0.8098624940730204,
+      "test_macro_f1": 0.8072858356125856,
+      "test_weighted_f1": 0.80951721487048,
+      "test_macro_precision": 0.8082875378152719,
+      "test_macro_recall": 0.8082784928662358
+    },
+    {
+      "size_setting": "100",
+      "samples_per_class": 100,
+      "total_training_samples": 900,
+      "train_time_seconds": 0.185,
+      "val_accuracy": 0.8618078561287269,
+      "test_accuracy": 0.8605974395448079,
+      "test_macro_f1": 0.8600528472590264,
+      "test_weighted_f1": 0.8601488946371477,
+      "test_macro_precision": 0.860331257969759,
+      "test_macro_recall": 0.8618819971812914
+    },
+    {
+      "size_setting": "200",
+      "samples_per_class": 200,
+      "total_training_samples": 1800,
+      "train_time_seconds": 0.426,
+      "val_accuracy": 0.9266445811642214,
+      "test_accuracy": 0.9227121858700806,
+      "test_macro_f1": 0.9221840972016112,
+      "test_weighted_f1": 0.9224201696387764,
+      "test_macro_precision": 0.9227352846858149,
+      "test_macro_recall": 0.9231417294911721
+    },
+    {
+      "size_setting": "Full",
+      "samples_per_class": 1094,
+      "total_training_samples": 9849,
+      "train_time_seconds": 1.97,
+      "val_accuracy": 0.9763369616658779,
+      "test_accuracy": 0.9743954480796586,
+      "test_macro_f1": 0.9743261587347458,
+      "test_weighted_f1": 0.9744025474176919,
+      "test_macro_precision": 0.9745593469195,
+      "test_macro_recall": 0.9743534385202364
+    }
+  ],
+  "svm": [
+    {
+      "size_setting": "50",
+      "samples_per_class": 50,
+      "total_training_samples": 450,
+      "train_time_seconds": 0.176,
+      "val_accuracy": 0.8338854708944629,
+      "test_accuracy": 0.8364153627311522,
+      "test_macro_f1": 0.8361659832790888,
+      "test_weighted_f1": 0.8369084411543892,
+      "test_macro_precision": 0.8429485639153506,
+      "test_macro_recall": 0.8370051336520186
+    },
+    {
+      "size_setting": "100",
+      "samples_per_class": 100,
+      "total_training_samples": 900,
+      "train_time_seconds": 0.43,
+      "val_accuracy": 0.9133932796971131,
+      "test_accuracy": 0.9089615931721194,
+      "test_macro_f1": 0.9087695212409636,
+      "test_weighted_f1": 0.9088761034398415,
+      "test_macro_precision": 0.9089735884456694,
+      "test_macro_recall": 0.9101886358836823
+    },
+    {
+      "size_setting": "200",
+      "samples_per_class": 200,
+      "total_training_samples": 1800,
+      "train_time_seconds": 1.34,
+      "val_accuracy": 0.9607193563653573,
+      "test_accuracy": 0.9606448553816975,
+      "test_macro_f1": 0.9607586880772215,
+      "test_weighted_f1": 0.9607217288659022,
+      "test_macro_precision": 0.9610820615080036,
+      "test_macro_recall": 0.9612020132122525
+    },
+    {
+      "size_setting": "Full",
+      "samples_per_class": 1094,
+      "total_training_samples": 9849,
+      "train_time_seconds": 17.256,
+      "val_accuracy": 0.9943208707998107,
+      "test_accuracy": 0.9919393077287814,
+      "test_macro_f1": 0.9918665471275072,
+      "test_weighted_f1": 0.991948090970636,
+      "test_macro_precision": 0.9919081406364632,
+      "test_macro_recall": 0.991848974819499
+    }
+  ]
+}

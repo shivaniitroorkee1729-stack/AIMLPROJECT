@@ -5,6 +5,7 @@ Stage 2: Top-Block Fine-Tuning (End-to-End Fine-Tuning with AdamW & Cosine Annea
 Monitors Train/Val loss and accuracy, checkpoints best model, and plots curves.
 """
 
+import os
 import sys
 import time
 import json
@@ -31,6 +32,33 @@ from config.settings import (
 from src.data.dataset_loader import get_dataloaders, NavarasaDataset
 from src.data.preprocessing import get_efficientnet_transforms
 from src.models.efficientnet_model import NavarasaEfficientNet
+
+
+def safe_save_model(state_dict, path, retries=5, delay=0.5):
+    """Safely saves PyTorch state dict or tensor dictionary handling Windows file locks."""
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temp_path = path.with_name(f"{path.stem}_tmp_{os.getpid()}_{int(time.time()*1000)}.pt")
+    torch.save(state_dict, temp_path)
+    for attempt in range(retries):
+        try:
+            if path.exists():
+                try:
+                    os.remove(path)
+                except OSError:
+                    pass
+            os.replace(temp_path, path)
+            return
+        except Exception as e:
+            if attempt == retries - 1:
+                try:
+                    import shutil
+                    shutil.copy2(temp_path, path)
+                    os.remove(temp_path)
+                except Exception as e2:
+                    print(f"Warning: could not overwrite {path}: {e2}. Saved as {temp_path}")
+            else:
+                time.sleep(delay)
 
 
 def extract_backbone_features(model, dataloader, device):
@@ -125,7 +153,7 @@ def train_head_stage(model, X_train, y_train, X_val, y_val, epochs=15, batch_siz
 
         if va_acc > best_acc:
             best_acc = va_acc
-            torch.save(model.state_dict(), EFFICIENTNET_BEST_MODEL_PATH)
+            safe_save_model(model.state_dict(), EFFICIENTNET_BEST_MODEL_PATH)
 
     print(f"Stage 1 Best Validation Accuracy: {best_acc * 100:.2f}%")
     return history, best_acc
@@ -204,7 +232,7 @@ def finetune_stage(model, train_loader, val_loader, history, epochs=3, lr=1e-4):
 
         if va_acc > best_acc:
             best_acc = va_acc
-            torch.save(model.state_dict(), EFFICIENTNET_BEST_MODEL_PATH)
+            safe_save_model(model.state_dict(), EFFICIENTNET_BEST_MODEL_PATH)
             print(f"  --> Saved new best checkpoint (Val Acc: {va_acc * 100:.2f}%)")
 
     return history, best_acc
@@ -221,31 +249,45 @@ def run_efficientnet_pipeline():
     train_tf_eval = get_efficientnet_transforms(is_training=False)
     val_tf = get_efficientnet_transforms(is_training=False)
 
-    train_ds = NavarasaDataset(SPLITS_DIR / "train.csv", transform=train_tf_eval)
-    val_ds = NavarasaDataset(SPLITS_DIR / "val.csv", transform=val_tf)
+    train_ds = NavarasaDataset(SPLITS_DIR / "train_crops.csv", transform=train_tf_eval)
+    val_ds = NavarasaDataset(SPLITS_DIR / "val_crops.csv", transform=val_tf)
 
     train_loader_feats = DataLoader(train_ds, batch_size=64, shuffle=False, num_workers=0)
     val_loader_feats = DataLoader(val_ds, batch_size=64, shuffle=False, num_workers=0)
 
-    # 1. Feature extraction for fast Stage 1
-    t0 = time.time()
-    X_train, y_train = extract_backbone_features(model, train_loader_feats, DEVICE)
-    X_val, y_val = extract_backbone_features(model, val_loader_feats, DEVICE)
-    print(f"Feature extraction done in {time.time() - t0:.1f}s. Shapes: Train={X_train.shape}, Val={X_val.shape}")
+    # 1. Feature extraction for fast Stage 1 on face crops (cached)
+    effnet_cache = MODELS_DIR / "effnet_face_crops_features.pt"
+    if effnet_cache.exists():
+        print(f"Loading cached face crop backbone features from {effnet_cache}...")
+        cache_data = torch.load(effnet_cache, weights_only=False, map_location="cpu")
+        X_train, y_train = cache_data["X_train"], cache_data["y_train"]
+        X_val, y_val = cache_data["X_val"], cache_data["y_val"]
+        print(f"Loaded features: Train={X_train.shape}, Val={X_val.shape}")
+    else:
+        t0 = time.time()
+        X_train, y_train = extract_backbone_features(model, train_loader_feats, DEVICE)
+        X_val, y_val = extract_backbone_features(model, val_loader_feats, DEVICE)
+        print(f"Face crop feature extraction done in {time.time() - t0:.1f}s. Shapes: Train={X_train.shape}, Val={X_val.shape}")
+        print(f"Caching features to {effnet_cache}...")
+        safe_save_model({"X_train": X_train, "y_train": y_train, "X_val": X_val, "y_val": y_val}, effnet_cache)
 
     # 2. Train head (Stage 1)
-    history, best_acc = train_head_stage(model, X_train, y_train, X_val, y_val, epochs=12, batch_size=64, lr=1e-3)
+    history, best_acc = train_head_stage(model, X_train, y_train, X_val, y_val, epochs=15, batch_size=64, lr=1e-3)
 
-    # 3. Fine-tune top block (Stage 2)
-    # Using a stratified subset of train loader for fast fine-tuning on CPU (e.g. 150 per class)
+    # Load best checkpoint from Stage 1 into model before Stage 2
+    if Path(EFFICIENTNET_BEST_MODEL_PATH).exists():
+        print(f"Loading best Stage 1 model from {EFFICIENTNET_BEST_MODEL_PATH}")
+        model.load_state_dict(torch.load(EFFICIENTNET_BEST_MODEL_PATH, weights_only=False, map_location=DEVICE))
+
+    # 3. Fine-tune top block (Stage 2) on augmented facial crops
     train_tf_aug = get_efficientnet_transforms(is_training=True)
     train_df = train_ds.df
-    # Sample 120 per class for fine-tuning
+    # Sample 150 per class for fine-tuning
     ft_indices = []
     np.random.seed(42)
     for c_idx in range(len(NAVARASA_CLASSES)):
         c_rows = train_df[train_df["class_idx"] == c_idx].index.values
-        sampled = np.random.choice(c_rows, size=min(120, len(c_rows)), replace=False)
+        sampled = np.random.choice(c_rows, size=min(150, len(c_rows)), replace=False)
         ft_indices.extend(sampled)
 
     ft_df = train_df.iloc[ft_indices].reset_index(drop=True)
@@ -254,7 +296,7 @@ def run_efficientnet_pipeline():
 
     val_loader = DataLoader(val_ds, batch_size=64, shuffle=False, num_workers=0)
 
-    history, final_best_acc = finetune_stage(model, ft_loader, val_loader, history, epochs=2, lr=8e-5)
+    history, final_best_acc = finetune_stage(model, ft_loader, val_loader, history, epochs=3, lr=8e-5)
 
     # Save training history JSON
     with open(EFFICIENTNET_METRICS_PATH, "w") as f:

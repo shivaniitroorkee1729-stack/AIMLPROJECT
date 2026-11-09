@@ -39,13 +39,14 @@ st.markdown(
 with st.sidebar:
     st.markdown("### ⚙️ Inference Settings")
     model_choice = st.radio(
-        "Select Pipeline Mode:",
+        "Select Model Architecture:",
         [
-            "EfficientNet-B0 (Fine-Tuned)",
-            "CLIP ViT-B/32 + Logistic Regression",
-            "Dual-Model Comparison (Simultaneous)",
+            "Model B: CLIP ViT-B/32 + SVM (Optimal, 99.2% Acc)",
+            "Model A: CLIP ViT-B/32 + Logistic Regression (97.4% Acc)",
+            "Model C: EfficientNet-B0 (Fine-Tuned)",
+            "Dual-Model Comparison (CLIP vs EfficientNet)",
         ],
-        index=0  # Default to lightweight EfficientNet-B0 (~60MB)
+        index=0  # Default to optimal Model B
     )
     st.markdown("---")
     st.markdown("### 🖼️ Sample Quick Select")
@@ -95,17 +96,19 @@ if validation_res is not None and validation_res.is_valid:
     if run_btn or pred_cache_key in st.session_state:
         if run_btn or pred_cache_key not in st.session_state:
             with st.spinner("Executing neural inference on validated facial crop..."):
-                if model_choice == "Dual-Model Comparison (Simultaneous)":
+                if model_choice == "Dual-Model Comparison (CLIP vs EfficientNet)":
                     res = predict_dual_models(face_crop, enforce_face_crop=False)
-                elif model_choice == "EfficientNet-B0 (Fine-Tuned)":
+                elif model_choice == "Model C: EfficientNet-B0 (Fine-Tuned)":
                     res = predict_efficientnet(face_crop, enforce_face_crop=False)
-                else:
-                    res = predict_clip(face_crop, enforce_face_crop=False)
+                elif model_choice == "Model A: CLIP ViT-B/32 + Logistic Regression (97.4% Acc)":
+                    res = predict_clip(face_crop, enforce_face_crop=False, model_type="logreg")
+                else:  # Model B: CLIP ViT-B/32 + SVM
+                    res = predict_clip(face_crop, enforce_face_crop=False, model_type="svm")
                 st.session_state[pred_cache_key] = res
         else:
             res = st.session_state[pred_cache_key]
 
-        if model_choice == "Dual-Model Comparison (Simultaneous)":
+        if model_choice == "Dual-Model Comparison (CLIP vs EfficientNet)":
             clip_res = res["clip"]
             eff_res = res["efficientnet"]
 
@@ -200,13 +203,14 @@ if validation_res is not None and validation_res.is_valid:
                 fig_bars = plot_probability_bars(res["probabilities"])
                 render_pyplot_and_close(fig_bars)
 
-        else:  # CLIP + Logistic Regression
+        else:  # CLIP models (SVM or Logistic Regression)
             meta = res["description"]
+            badge_title = "CLIP ViT-B/32 + SVM" if "SVM" in model_choice else "CLIP ViT-B/32 + LOGREG"
 
             st.markdown(
                 f"""
                 <div class="navarasa-card" style="border-top: 5px solid {meta.get('color', '#1E88E5')};">
-                    <span class="badge-green">CLIP ViT-B/32 PREDICTION</span>
+                    <span class="badge-green">{badge_title}</span>
                     <h1 style="margin: 8px 0; font-size: 2.2rem; color: {THEME['deep_green']};">{res['predicted_class']}</h1>
                     <div style="font-size: 1.25rem; font-weight: 700; color: #1E88E5;">
                         Confidence: {res['confidence'] * 100:.1f}%

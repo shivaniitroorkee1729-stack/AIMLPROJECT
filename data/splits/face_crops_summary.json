@@ -1,0 +1,20 @@
+{
+  "train": {
+    "total_input": 9870,
+    "valid_crops": 9849,
+    "rejected_count": 21,
+    "retention_rate": 99.79
+  },
+  "val": {
+    "total_input": 2115,
+    "valid_crops": 2113,
+    "rejected_count": 2,
+    "retention_rate": 99.91
+  },
+  "test": {
+    "total_input": 2115,
+    "valid_crops": 2109,
+    "rejected_count": 6,
+    "retention_rate": 99.72
+  }
+}

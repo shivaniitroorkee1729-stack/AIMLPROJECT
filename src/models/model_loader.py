@@ -67,25 +67,39 @@ def get_efficientnet_model(device=None):
 
 # 2. CLIP Vision Pipeline (Cached Singleton, Lazy Loaded Only on Demand)
 @_cache_resource_decorator
-def _load_clip_cached(device_str: str = "cpu"):
+def _load_clip_cached(device_str: str = "cpu", model_type: str = "svm"):
     from src.models.clip_model import CLIPClassifierPipeline
     dev = torch.device(device_str)
     pipeline = CLIPClassifierPipeline(device=dev)
     pipeline.load_clip_encoder()
-    if CLIP_MODEL_PATH.exists():
-        pipeline.load_model(CLIP_MODEL_PATH)
+    if model_type == "svm":
+        target_path = MODELS_DIR / "clip_svm.joblib"
+    else:
+        target_path = MODELS_DIR / "clip_logistic_regression.joblib"
+    if not target_path.exists():
+        target_path = CLIP_MODEL_PATH
+    if target_path.exists():
+        pipeline.load_model(target_path)
     gc.collect()
     return pipeline
 
 
-def get_clip_pipeline(device=None):
+def get_clip_pipeline(device=None, model_type="svm"):
     dev_str = str(device or DEVICE)
-    cache_key = f"clip_{dev_str}"
+    cache_key = f"clip_{dev_str}_{model_type}"
     if HAS_STREAMLIT and hasattr(st, "cache_resource"):
-        return _load_clip_cached(dev_str)
+        return _load_clip_cached(dev_str, model_type=model_type)
     if cache_key not in _FALLBACK_CACHE:
-        _FALLBACK_CACHE[cache_key] = _load_clip_cached(dev_str)
+        _FALLBACK_CACHE[cache_key] = _load_clip_cached(dev_str, model_type=model_type)
     return _FALLBACK_CACHE[cache_key]
+
+
+def get_clip_svm_pipeline(device=None):
+    return get_clip_pipeline(device=device, model_type="svm")
+
+
+def get_clip_logreg_pipeline(device=None):
+    return get_clip_pipeline(device=device, model_type="logreg")
 
 
 get_clip_model = get_clip_pipeline

@@ -20,9 +20,9 @@ from src.models.model_loader import get_clip_pipeline, get_efficientnet_model
 from src.face_detection import validate_face_image, FaceValidationStatus, FaceValidationResult
 
 
-def predict_clip(image_input, enforce_face_crop: bool = True):
+def predict_clip(image_input, enforce_face_crop: bool = True, model_type: str = "svm"):
     """
-    Runs prediction using CLIP + Logistic Regression pipeline.
+    Runs prediction using CLIP + Classifier (SVM or Logistic Regression).
     Optionally enforces face validation and uses the extracted facial crop.
     """
     validation_res = None
@@ -34,15 +34,17 @@ def predict_clip(image_input, enforce_face_crop: bool = True):
     else:
         img_to_process = image_input
 
-    pipeline = get_clip_pipeline()
+    pipeline = get_clip_pipeline(model_type=model_type)
     pred_class, confidence, probabilities, embedding = pipeline.predict(img_to_process)
 
     # Sort probabilities descending
     sorted_probs = sorted(probabilities.items(), key=lambda x: x[1], reverse=True)
     top_3 = sorted_probs[:3]
 
+    model_display_name = "CLIP ViT-B/32 + SVM" if model_type == "svm" else "CLIP ViT-B/32 + Logistic Regression"
+
     result = {
-        "model_name": "CLIP ViT-B/32 + Logistic Regression",
+        "model_name": model_display_name,
         "predicted_class": pred_class,
         "confidence": confidence,
         "probabilities": probabilities,
@@ -55,6 +57,14 @@ def predict_clip(image_input, enforce_face_crop: bool = True):
         result["face_crop"] = validation_res.face_crop
 
     return result
+
+
+def predict_clip_svm(image_input, enforce_face_crop: bool = True):
+    return predict_clip(image_input, enforce_face_crop=enforce_face_crop, model_type="svm")
+
+
+def predict_clip_logreg(image_input, enforce_face_crop: bool = True):
+    return predict_clip(image_input, enforce_face_crop=enforce_face_crop, model_type="logreg")
 
 
 def predict_efficientnet(image_input, device=DEVICE, enforce_face_crop: bool = True):

@@ -155,25 +155,36 @@ Uploaded Image ➔ EXIF Orientation Transpose ➔ Dual-Engine Cascade (YuNet + M
 
 ---
 
-## 8. Model Architectures
+## 8. Model Architectures & Retraining on Facial Crops
 
+To eliminate domain shift between costume/background features and human facial expressions, all models were retrained and calibrated strictly on standardized facial crops (aspect-ratio-preserved bounding boxes with $22\%$ proportional padding).
 
-### Pipeline A: CLIP ViT-B/32 + Logistic Regression
+### Model A: CLIP ViT-B/32 + Logistic Regression
 ```
-Facial Image (224x224) ➔ Frozen CLIP ViT-B/32 ➔ 512-dim Embedding ➔ Tuned LogReg (C=10.0) ➔ 9 Classes
+Facial Crop (224x224) ➔ Frozen CLIP ViT-B/32 ➔ 512-dim L2 Embedding ➔ Tuned LogReg (C=10.0) ➔ 9 Classes
 ```
 - **Vision Encoder:** OpenAI ViT-B/32 vision transformer backbone frozen during feature extraction.
-- **Classifier:** L2-regularized multinomial Logistic Regression.
-- **Hyperparameter Tuning:** Validation search over $C \in [0.01, 10.0]$ established optimal $C=10.0$ with $97.49\%$ validation accuracy.
+- **Classifier:** L2-regularized multinomial Logistic Regression ($C=10.0$).
+- **Test Accuracy on Facial Crops:** **97.44%** | **Macro F1:** **97.43%** | **Latency:** **0.01 ms/sample**
 - **Artifact:** `artifacts/models/clip_logistic_regression.joblib`
 
-### Pipeline B: EfficientNet-B0 (Two-Stage Fine-Tuning)
+### Model B: CLIP ViT-B/32 + Support Vector Machine (Primary Production Model)
 ```
-Facial Image (224x224) ➔ EfficientNet-B0 ➔ Dropout(0.4) ➔ Linear(1280, 9) ➔ CrossEntropyLoss ➔ 9 Classes
+Facial Crop (224x224) ➔ Frozen CLIP ViT-B/32 ➔ 512-dim L2 Embedding ➔ RBF Kernel SVM (C=5.0) ➔ 9 Classes
+```
+- **Vision Encoder:** OpenAI ViT-B/32 vision transformer backbone.
+- **Classifier:** Support Vector Machine with Radial Basis Function (RBF) kernel and Platt probability scaling ($C=5.0$).
+- **Test Accuracy on Facial Crops:** **99.19%** | **Macro F1:** **99.19%** | **Latency:** **6.40 ms/sample**
+- **Artifact:** `artifacts/models/clip_svm.joblib`
+
+### Model C: EfficientNet-B0 (Two-Stage Fine-Tuning)
+```
+Facial Crop (224x224) ➔ EfficientNet-B0 ➔ Dropout(0.4) ➔ Linear(1280, 9) ➔ Label Smoothing (0.05) ➔ 9 Classes
 ```
 - **Backbone:** EfficientNet-B0 compound scaling architecture initialized with ImageNet weights.
-- **Stage 1 (Head Optimization):** Backbone frozen; classification head optimized using AdamW ($\eta = 10^{-3}$) with Cosine Annealing.
-- **Stage 2 (Fine-Tuning):** Top inverted bottleneck blocks unfrozen and fine-tuned with reduced learning rate ($\eta = 10^{-4}$).
+- **Stage 1 (Head Optimization):** Backbone frozen; classification head optimized using AdamW ($\eta = 10^{-3}$) with Cosine Annealing (15 epochs).
+- **Stage 2 (Fine-Tuning):** Top inverted bottleneck block unfrozen and fine-tuned ($\eta = 10^{-4}$).
+- **Test Accuracy on Facial Crops:** **95.02%** | **Macro F1:** **95.02%** | **Latency:** **58.89 ms/sample**
 - **Artifact:** `artifacts/models/efficientnet_b0_best.pt`
 
 ---
@@ -183,7 +194,7 @@ Facial Image (224x224) ➔ EfficientNet-B0 ➔ Dropout(0.4) ➔ Linear(1280, 9) 
 ### 1. Exact Grad-CAM Visual Grounding
 Computes class-specific activation gradients with respect to the final convolutional feature maps:
 $$\alpha_k^c = \frac{1}{Z} \sum_{i} \sum_{j} \frac{\partial y^c}{\partial A_{i,j}^k}, \quad L_{\text{Grad-CAM}}^c = \text{ReLU}\left(\sum_k \alpha_k^c A^k\right)$$
-Overlays high-resolution thermal attention maps on the original image with customizable opacity and colormaps.
+Overlays high-resolution thermal attention maps on the facial crop with customizable opacity and colormaps.
 
 ### 2. Six-Region Facial Energy Segmentation
 Segments facial anatomy into:
@@ -213,33 +224,45 @@ Generates multi-paragraph clinical explanations synthesizing predicted sentiment
 
 ## 10. Experimental Results & Benchmarks
 
-### Held-Out Test Set Performance (2,115 Unseen Images):
-| Model Pipeline | Test Accuracy | Macro Precision | Macro Recall | Macro F1-Score | Weighted F1-Score |
-|----------------|---------------|-----------------|--------------|----------------|-------------------|
-| **CLIP ViT-B/32 + LogReg** | **97.40%** | **97.37%** | **97.39%** | **97.37%** | **97.40%** |
-| **EfficientNet-B0 (Fine-Tuned)** | **94.99%** | **94.99%** | **95.04%** | **95.00%** | **94.97%** |
+### Comprehensive Held-Out Test Set Benchmark (2,109 Strictly Unseen Facial Crops):
+| Evaluation Metric | Model A: CLIP + LogReg | Model B: CLIP + SVM (Primary) | Model C: EfficientNet-B0 |
+|:---|:---:|:---:|:---:|
+| **Test Accuracy** | **97.44%** | **99.19%** | **95.02%** |
+| **Macro Precision** | 97.46% | 99.19% | 95.01% |
+| **Macro Recall** | 97.44% | 99.18% | 95.06% |
+| **Macro F1-Score** | 97.43% | 99.19% | 95.02% |
+| **Weighted F1-Score**| 97.44% | 99.19% | 95.02% |
+| **Inference Latency** | 0.01 ms | 6.40 ms | 58.89 ms |
 
-### Per-Class Test Performance (Both Models):
-| Navarasa Class | CLIP Precision | CLIP Recall | CLIP F1 | EffNet Precision | EffNet Recall | EffNet F1 |
-|----------------|----------------|-------------|---------|------------------|---------------|-----------|
-| **Shringara**  | 95.6%          | 97.0%       | 96.3%   | 95.1%            | 97.0%         | 96.1%     |
-| **Hasya**      | 97.9%          | 95.6%       | 96.7%   | 92.1%            | 88.4%         | 90.2%     |
-| **Karuna**     | 98.4%          | 99.6%       | 99.0%   | 95.2%            | 95.5%         | 95.4%     |
-| **Raudra**     | 94.7%          | 97.5%       | 96.1%   | 94.8%            | 99.2%         | 96.9%     |
-| **Veera**      | 97.9%          | 97.0%       | 97.4%   | 95.7%            | 95.7%         | 95.7%     |
-| **Bhayanaka**  | 97.1%          | 96.7%       | 96.9%   | 94.3%            | 95.5%         | 94.9%     |
-| **Bibhatsa**   | 98.2%          | 94.9%       | 96.5%   | 93.8%            | 90.6%         | 92.2%     |
-| **Adbhuta**    | 96.9%          | 98.2%       | 97.6%   | 96.4%            | 96.0%         | 96.2%     |
-| **Shanta**     | 99.6%          | 100.0%      | 99.8%   | 97.5%            | 97.5%         | 97.5%     |
+### Per-Class F1-Score Across All 9 Navarasas:
+| Navarasa Class | Support | Model A (LogReg) F1 | Model B (SVM) F1 | Model C (EffNet) F1 |
+|:---|:---:|:---:|:---:|:---:|
+| **Shringara** | 202 | 97.77% | **98.76%** | 95.10% |
+| **Hasya** | 248 | 98.18% | **99.19%** | 93.06% |
+| **Karuna** | 247 | 98.37% | **99.60%** | 96.52% |
+| **Raudra** | 238 | 96.49% | **98.95%** | 94.96% |
+| **Veera** | 232 | 96.41% | **98.29%** | 92.99% |
+| **Bhayanaka** | 242 | 95.78% | **99.17%** | 91.77% |
+| **Bibhatsa** | 233 | 96.55% | **98.92%** | 94.32% |
+| **Adbhuta** | 223 | 97.75% | **100.00%** | 96.90% |
+| **Shanta** | 244 | 99.59% | **99.79%** | 99.59% |
 
-### Dataset Size Scaling Experiments:
-Fixed validation and test sets; evaluated across training sample increments:
-| Samples / Class | Total Training Size | Test Accuracy | Macro F1-Score | Weighted F1-Score |
-|-----------------|---------------------|---------------|----------------|-------------------|
-| **50 / class**  | 450 samples         | 50.35%        | 50.33%         | 50.41%            |
-| **100 / class** | 900 samples         | 57.73%        | 57.20%         | 57.38%            |
-| **200 / class** | 1,800 samples       | 70.31%        | 69.89%         | 70.12%            |
-| **Full Dataset**| 9,870 samples       | **97.40%**    | **97.29%**     | **97.40%**        |
+### Resolution of Historically Confusing Pairs:
+| Problematic Pair | Ground Truth Samples | Model A Mutual Error | Model B Mutual Error | Model C Mutual Error |
+|:---|:---:|:---:|:---:|:---:|
+| **Hasya vs. Bhayanaka** | 248 Hasya / 242 Bhayanaka | **0.0% (0 errors)** | **0.0% (0 errors)** | 0.41% (2 errors) |
+| **Karuna vs. Shanta** | 247 Karuna / 244 Shanta | **0.0% (0 errors)** | **0.0% (0 errors)** | 0.20% (1 error) |
+| **Raudra vs. Veera** | 238 Raudra / 232 Veera | 1.70% (8 errors) | **0.85% (4 errors)** | 1.91% (9 errors) |
+| **Adbhuta vs. Bhayanaka** | 223 Adbhuta / 242 Bhayanaka | 1.29% (6 errors) | **0.0% (0 errors)** | 1.29% (6 errors) |
+
+### Dataset Size Scaling Experiments on Facial Crops:
+Fixed validation (2,113) and test (2,109) sets; evaluated across training sample increments:
+| Samples / Class | Total Training Size | Model B (SVM) Test Acc | Model B (SVM) Macro F1 | Model A (LogReg) Test Acc | Model A (LogReg) Macro F1 |
+|:---|:---:|:---:|:---:|:---:|:---:|
+| **50 / class** | 450 samples | 83.64% | 83.62% | 80.99% | 80.73% |
+| **100 / class** | 900 samples | 90.90% | 90.88% | 86.06% | 86.01% |
+| **200 / class** | 1,800 samples | 96.06% | 96.08% | 92.27% | 92.22% |
+| **Full Dataset** | 9,849 samples | **99.19%** | **99.19%** | **97.44%** | **97.43%** |
 
 ---
 

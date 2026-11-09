@@ -1,5 +1,5 @@
 {
-  "dataset_split": "Held-Out Test Set (2,115 samples)",
+  "dataset_split": "Held-Out Facial Crops Test Set (2109 samples)",
   "classes": [
     "Shringara",
     "Hasya",
@@ -11,479 +11,886 @@
     "Adbhuta",
     "Shanta"
   ],
-  "clip_logreg": {
-    "accuracy": 0.9739952718676123,
-    "macro_precision": 0.9737129812430001,
-    "macro_recall": 0.9738780867860037,
-    "macro_f1": 0.9737072896544015,
-    "weighted_precision": 0.9741416615576025,
-    "weighted_recall": 0.9739952718676123,
-    "weighted_f1": 0.9739798567086378,
-    "per_class": {
-      "Shringara": {
-        "precision": 0.9560975609756097,
-        "recall": 0.9702970297029703,
-        "f1_score": 0.9631449631449631,
-        "support": 202
+  "models": {
+    "model_a_clip_logreg": {
+      "accuracy": 0.9743954480796586,
+      "macro_precision": 0.9745593469195,
+      "macro_recall": 0.9743534385202364,
+      "macro_f1": 0.9743261587347458,
+      "weighted_precision": 0.9746734254938488,
+      "weighted_recall": 0.9743954480796586,
+      "weighted_f1": 0.9744025474176919,
+      "per_class": {
+        "Shringara": {
+          "precision": 0.9800995024875622,
+          "recall": 0.9752475247524752,
+          "f1_score": 0.9776674937965261,
+          "support": 202
+        },
+        "Hasya": {
+          "precision": 0.9838056680161943,
+          "recall": 0.9798387096774194,
+          "f1_score": 0.9818181818181818,
+          "support": 248
+        },
+        "Karuna": {
+          "precision": 0.9877551020408163,
+          "recall": 0.979757085020243,
+          "f1_score": 0.983739837398374,
+          "support": 247
+        },
+        "Raudra": {
+          "precision": 0.9473684210526315,
+          "recall": 0.9831932773109243,
+          "f1_score": 0.9649484536082474,
+          "support": 238
+        },
+        "Veera": {
+          "precision": 0.946058091286307,
+          "recall": 0.9827586206896551,
+          "f1_score": 0.9640591966173362,
+          "support": 232
+        },
+        "Bhayanaka": {
+          "precision": 0.978448275862069,
+          "recall": 0.9380165289256198,
+          "f1_score": 0.9578059071729957,
+          "support": 242
+        },
+        "Bibhatsa": {
+          "precision": 0.9696969696969697,
+          "recall": 0.9613733905579399,
+          "f1_score": 0.9655172413793104,
+          "support": 233
+        },
+        "Adbhuta": {
+          "precision": 0.9819004524886877,
+          "recall": 0.9730941704035875,
+          "f1_score": 0.9774774774774775,
+          "support": 223
+        },
+        "Shanta": {
+          "precision": 0.9959016393442623,
+          "recall": 0.9959016393442623,
+          "f1_score": 0.9959016393442623,
+          "support": 244
+        }
       },
-      "Hasya": {
-        "precision": 0.9794238683127572,
-        "recall": 0.9558232931726908,
-        "f1_score": 0.967479674796748,
-        "support": 249
+      "confusion_matrix": [
+        [
+          197,
+          1,
+          0,
+          1,
+          0,
+          0,
+          3,
+          0,
+          0
+        ],
+        [
+          4,
+          243,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          242,
+          0,
+          3,
+          0,
+          2,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          234,
+          4,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          4,
+          228,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          7,
+          2,
+          227,
+          2,
+          4,
+          0
+        ],
+        [
+          0,
+          2,
+          2,
+          1,
+          1,
+          3,
+          224,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          0,
+          1,
+          2,
+          0,
+          217,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          243
+        ]
+      ],
+      "classification_report": {
+        "Shringara": {
+          "precision": 0.9800995024875622,
+          "recall": 0.9752475247524752,
+          "f1-score": 0.9776674937965261,
+          "support": 202.0
+        },
+        "Hasya": {
+          "precision": 0.9838056680161943,
+          "recall": 0.9798387096774194,
+          "f1-score": 0.9818181818181818,
+          "support": 248.0
+        },
+        "Karuna": {
+          "precision": 0.9877551020408163,
+          "recall": 0.979757085020243,
+          "f1-score": 0.983739837398374,
+          "support": 247.0
+        },
+        "Raudra": {
+          "precision": 0.9473684210526315,
+          "recall": 0.9831932773109243,
+          "f1-score": 0.9649484536082474,
+          "support": 238.0
+        },
+        "Veera": {
+          "precision": 0.946058091286307,
+          "recall": 0.9827586206896551,
+          "f1-score": 0.9640591966173362,
+          "support": 232.0
+        },
+        "Bhayanaka": {
+          "precision": 0.978448275862069,
+          "recall": 0.9380165289256198,
+          "f1-score": 0.9578059071729957,
+          "support": 242.0
+        },
+        "Bibhatsa": {
+          "precision": 0.9696969696969697,
+          "recall": 0.9613733905579399,
+          "f1-score": 0.9655172413793104,
+          "support": 233.0
+        },
+        "Adbhuta": {
+          "precision": 0.9819004524886877,
+          "recall": 0.9730941704035875,
+          "f1-score": 0.9774774774774775,
+          "support": 223.0
+        },
+        "Shanta": {
+          "precision": 0.9959016393442623,
+          "recall": 0.9959016393442623,
+          "f1-score": 0.9959016393442623,
+          "support": 244.0
+        },
+        "accuracy": 0.9743954480796586,
+        "macro avg": {
+          "precision": 0.9745593469195,
+          "recall": 0.9743534385202364,
+          "f1-score": 0.9743261587347458,
+          "support": 2109.0
+        },
+        "weighted avg": {
+          "precision": 0.9746734254938488,
+          "recall": 0.9743954480796586,
+          "f1-score": 0.9744025474176919,
+          "support": 2109.0
+        }
       },
-      "Karuna": {
-        "precision": 0.984,
-        "recall": 0.9959514170040485,
-        "f1_score": 0.9899396378269618,
-        "support": 247
-      },
-      "Raudra": {
-        "precision": 0.9471544715447154,
-        "recall": 0.9748953974895398,
-        "f1_score": 0.9608247422680413,
-        "support": 239
-      },
-      "Veera": {
-        "precision": 0.9785407725321889,
-        "recall": 0.9702127659574468,
-        "f1_score": 0.9743589743589743,
-        "support": 235
-      },
-      "Bhayanaka": {
-        "precision": 0.970954356846473,
-        "recall": 0.9669421487603306,
-        "f1_score": 0.968944099378882,
-        "support": 242
-      },
-      "Bibhatsa": {
-        "precision": 0.9823008849557522,
-        "recall": 0.9487179487179487,
-        "f1_score": 0.9652173913043478,
-        "support": 234
-      },
-      "Adbhuta": {
-        "precision": 0.9690265486725663,
-        "recall": 0.9820627802690582,
-        "f1_score": 0.9755011135857461,
-        "support": 223
-      },
-      "Shanta": {
-        "precision": 0.9959183673469387,
-        "recall": 1.0,
-        "f1_score": 0.9979550102249489,
-        "support": 244
+      "latency_ms_per_sample": 0.01,
+      "confusing_pairs_analysis": {
+        "Hasya_vs_Bhayanaka": {
+          "class_a": "Hasya",
+          "class_b": "Bhayanaka",
+          "total_true_a": 248,
+          "total_true_b": 242,
+          "a_misclassified_as_b_count": 0,
+          "a_misclassified_as_b_percent": 0.0,
+          "b_misclassified_as_a_count": 0,
+          "b_misclassified_as_a_percent": 0.0,
+          "total_mutual_errors": 0,
+          "mutual_confusion_rate_percent": 0.0
+        },
+        "Karuna_vs_Shanta": {
+          "class_a": "Karuna",
+          "class_b": "Shanta",
+          "total_true_a": 247,
+          "total_true_b": 244,
+          "a_misclassified_as_b_count": 0,
+          "a_misclassified_as_b_percent": 0.0,
+          "b_misclassified_as_a_count": 0,
+          "b_misclassified_as_a_percent": 0.0,
+          "total_mutual_errors": 0,
+          "mutual_confusion_rate_percent": 0.0
+        },
+        "Raudra_vs_Veera": {
+          "class_a": "Raudra",
+          "class_b": "Veera",
+          "total_true_a": 238,
+          "total_true_b": 232,
+          "a_misclassified_as_b_count": 4,
+          "a_misclassified_as_b_percent": 1.68,
+          "b_misclassified_as_a_count": 4,
+          "b_misclassified_as_a_percent": 1.72,
+          "total_mutual_errors": 8,
+          "mutual_confusion_rate_percent": 1.7
+        },
+        "Adbhuta_vs_Bhayanaka": {
+          "class_a": "Adbhuta",
+          "class_b": "Bhayanaka",
+          "total_true_a": 223,
+          "total_true_b": 242,
+          "a_misclassified_as_b_count": 2,
+          "a_misclassified_as_b_percent": 0.9,
+          "b_misclassified_as_a_count": 4,
+          "b_misclassified_as_a_percent": 1.65,
+          "total_mutual_errors": 6,
+          "mutual_confusion_rate_percent": 1.29
+        }
       }
     },
-    "confusion_matrix": [
-      [
-        196,
-        2,
-        0,
-        1,
-        0,
-        1,
-        0,
-        2,
-        0
+    "model_b_clip_svm": {
+      "accuracy": 0.9919393077287814,
+      "macro_precision": 0.9919081406364632,
+      "macro_recall": 0.991848974819499,
+      "macro_f1": 0.9918665471275072,
+      "weighted_precision": 0.9919807221170056,
+      "weighted_recall": 0.9919393077287814,
+      "weighted_f1": 0.991948090970636,
+      "per_class": {
+        "Shringara": {
+          "precision": 0.9900497512437811,
+          "recall": 0.9851485148514851,
+          "f1_score": 0.9875930521091811,
+          "support": 202
+        },
+        "Hasya": {
+          "precision": 0.9919354838709677,
+          "recall": 0.9919354838709677,
+          "f1_score": 0.9919354838709677,
+          "support": 248
+        },
+        "Karuna": {
+          "precision": 0.9959514170040485,
+          "recall": 0.9959514170040485,
+          "f1_score": 0.9959514170040485,
+          "support": 247
+        },
+        "Raudra": {
+          "precision": 0.9874476987447699,
+          "recall": 0.9915966386554622,
+          "f1_score": 0.989517819706499,
+          "support": 238
+        },
+        "Veera": {
+          "precision": 0.9745762711864406,
+          "recall": 0.9913793103448276,
+          "f1_score": 0.9829059829059829,
+          "support": 232
+        },
+        "Bhayanaka": {
+          "precision": 0.9958333333333333,
+          "recall": 0.987603305785124,
+          "f1_score": 0.991701244813278,
+          "support": 242
+        },
+        "Bibhatsa": {
+          "precision": 0.9913793103448276,
+          "recall": 0.9871244635193133,
+          "f1_score": 0.989247311827957,
+          "support": 233
+        },
+        "Adbhuta": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1_score": 1.0,
+          "support": 223
+        },
+        "Shanta": {
+          "precision": 1.0,
+          "recall": 0.9959016393442623,
+          "f1_score": 0.997946611909651,
+          "support": 244
+        }
+      },
+      "confusion_matrix": [
+        [
+          199,
+          2,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          246,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          246,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          236,
+          2,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          2,
+          230,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          1,
+          0,
+          239,
+          2,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1,
+          0,
+          1,
+          1,
+          230,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          223,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          243
+        ]
       ],
-      [
-        6,
-        238,
-        0,
-        0,
-        1,
-        1,
-        3,
-        0,
-        0
+      "classification_report": {
+        "Shringara": {
+          "precision": 0.9900497512437811,
+          "recall": 0.9851485148514851,
+          "f1-score": 0.9875930521091811,
+          "support": 202.0
+        },
+        "Hasya": {
+          "precision": 0.9919354838709677,
+          "recall": 0.9919354838709677,
+          "f1-score": 0.9919354838709677,
+          "support": 248.0
+        },
+        "Karuna": {
+          "precision": 0.9959514170040485,
+          "recall": 0.9959514170040485,
+          "f1-score": 0.9959514170040485,
+          "support": 247.0
+        },
+        "Raudra": {
+          "precision": 0.9874476987447699,
+          "recall": 0.9915966386554622,
+          "f1-score": 0.989517819706499,
+          "support": 238.0
+        },
+        "Veera": {
+          "precision": 0.9745762711864406,
+          "recall": 0.9913793103448276,
+          "f1-score": 0.9829059829059829,
+          "support": 232.0
+        },
+        "Bhayanaka": {
+          "precision": 0.9958333333333333,
+          "recall": 0.987603305785124,
+          "f1-score": 0.991701244813278,
+          "support": 242.0
+        },
+        "Bibhatsa": {
+          "precision": 0.9913793103448276,
+          "recall": 0.9871244635193133,
+          "f1-score": 0.989247311827957,
+          "support": 233.0
+        },
+        "Adbhuta": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
+          "support": 223.0
+        },
+        "Shanta": {
+          "precision": 1.0,
+          "recall": 0.9959016393442623,
+          "f1-score": 0.997946611909651,
+          "support": 244.0
+        },
+        "accuracy": 0.9919393077287814,
+        "macro avg": {
+          "precision": 0.9919081406364632,
+          "recall": 0.991848974819499,
+          "f1-score": 0.9918665471275072,
+          "support": 2109.0
+        },
+        "weighted avg": {
+          "precision": 0.9919807221170056,
+          "recall": 0.9919393077287814,
+          "f1-score": 0.991948090970636,
+          "support": 2109.0
+        }
+      },
+      "latency_ms_per_sample": 6.404,
+      "confusing_pairs_analysis": {
+        "Hasya_vs_Bhayanaka": {
+          "class_a": "Hasya",
+          "class_b": "Bhayanaka",
+          "total_true_a": 248,
+          "total_true_b": 242,
+          "a_misclassified_as_b_count": 0,
+          "a_misclassified_as_b_percent": 0.0,
+          "b_misclassified_as_a_count": 0,
+          "b_misclassified_as_a_percent": 0.0,
+          "total_mutual_errors": 0,
+          "mutual_confusion_rate_percent": 0.0
+        },
+        "Karuna_vs_Shanta": {
+          "class_a": "Karuna",
+          "class_b": "Shanta",
+          "total_true_a": 247,
+          "total_true_b": 244,
+          "a_misclassified_as_b_count": 0,
+          "a_misclassified_as_b_percent": 0.0,
+          "b_misclassified_as_a_count": 0,
+          "b_misclassified_as_a_percent": 0.0,
+          "total_mutual_errors": 0,
+          "mutual_confusion_rate_percent": 0.0
+        },
+        "Raudra_vs_Veera": {
+          "class_a": "Raudra",
+          "class_b": "Veera",
+          "total_true_a": 238,
+          "total_true_b": 232,
+          "a_misclassified_as_b_count": 2,
+          "a_misclassified_as_b_percent": 0.84,
+          "b_misclassified_as_a_count": 2,
+          "b_misclassified_as_a_percent": 0.86,
+          "total_mutual_errors": 4,
+          "mutual_confusion_rate_percent": 0.85
+        },
+        "Adbhuta_vs_Bhayanaka": {
+          "class_a": "Adbhuta",
+          "class_b": "Bhayanaka",
+          "total_true_a": 223,
+          "total_true_b": 242,
+          "a_misclassified_as_b_count": 0,
+          "a_misclassified_as_b_percent": 0.0,
+          "b_misclassified_as_a_count": 0,
+          "b_misclassified_as_a_percent": 0.0,
+          "total_mutual_errors": 0,
+          "mutual_confusion_rate_percent": 0.0
+        }
+      }
+    },
+    "model_c_efficientnet_b0": {
+      "accuracy": 0.9502133712660028,
+      "macro_precision": 0.9501298568426623,
+      "macro_recall": 0.9505836071178747,
+      "macro_f1": 0.9502443389844559,
+      "weighted_precision": 0.9504323609617427,
+      "weighted_recall": 0.9502133712660028,
+      "weighted_f1": 0.9502116346419156,
+      "per_class": {
+        "Shringara": {
+          "precision": 0.941747572815534,
+          "recall": 0.9603960396039604,
+          "f1_score": 0.9509803921568627,
+          "support": 202
+        },
+        "Hasya": {
+          "precision": 0.9421487603305785,
+          "recall": 0.9193548387096774,
+          "f1_score": 0.9306122448979591,
+          "support": 248
+        },
+        "Karuna": {
+          "precision": 0.9752066115702479,
+          "recall": 0.9554655870445344,
+          "f1_score": 0.9652351738241309,
+          "support": 247
+        },
+        "Raudra": {
+          "precision": 0.9495798319327731,
+          "recall": 0.9495798319327731,
+          "f1_score": 0.9495798319327731,
+          "support": 238
+        },
+        "Veera": {
+          "precision": 0.9163179916317992,
+          "recall": 0.9439655172413793,
+          "f1_score": 0.9299363057324841,
+          "support": 232
+        },
+        "Bhayanaka": {
+          "precision": 0.9139344262295082,
+          "recall": 0.9214876033057852,
+          "f1_score": 0.9176954732510288,
+          "support": 242
+        },
+        "Bibhatsa": {
+          "precision": 0.96,
+          "recall": 0.927038626609442,
+          "f1_score": 0.9432314410480349,
+          "support": 233
+        },
+        "Adbhuta": {
+          "precision": 0.9563318777292577,
+          "recall": 0.9820627802690582,
+          "f1_score": 0.9690265486725663,
+          "support": 223
+        },
+        "Shanta": {
+          "precision": 0.9959016393442623,
+          "recall": 0.9959016393442623,
+          "f1_score": 0.9959016393442623,
+          "support": 244
+        }
+      },
+      "confusion_matrix": [
+        [
+          194,
+          1,
+          0,
+          2,
+          1,
+          1,
+          1,
+          2,
+          0
+        ],
+        [
+          5,
+          228,
+          3,
+          0,
+          3,
+          2,
+          5,
+          2,
+          0
+        ],
+        [
+          1,
+          3,
+          236,
+          0,
+          6,
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          226,
+          3,
+          7,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          2,
+          1,
+          6,
+          219,
+          4,
+          0,
+          0,
+          0
+        ],
+        [
+          3,
+          0,
+          0,
+          3,
+          6,
+          223,
+          2,
+          5,
+          0
+        ],
+        [
+          3,
+          5,
+          2,
+          0,
+          1,
+          6,
+          216,
+          0,
+          0
+        ],
+        [
+          0,
+          2,
+          0,
+          1,
+          0,
+          1,
+          0,
+          219,
+          0
+        ],
+        [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          243
+        ]
       ],
-      [
-        0,
-        0,
-        246,
-        1,
-        0,
-        0,
-        0,
-        0,
-        0
-      ],
-      [
-        0,
-        0,
-        0,
-        233,
-        2,
-        1,
-        0,
-        3,
-        0
-      ],
-      [
-        0,
-        0,
-        0,
-        7,
-        228,
-        0,
-        0,
-        0,
-        0
-      ],
-      [
-        2,
-        0,
-        4,
-        0,
-        0,
-        234,
-        1,
-        1,
-        0
-      ],
-      [
-        0,
-        3,
-        0,
-        4,
-        2,
-        2,
-        222,
-        1,
-        0
-      ],
-      [
-        1,
-        0,
-        0,
-        0,
-        0,
-        2,
-        0,
-        219,
-        1
-      ],
-      [
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        244
-      ]
-    ],
-    "classification_report": {
-      "Shringara": {
-        "precision": 0.9560975609756097,
-        "recall": 0.9702970297029703,
-        "f1-score": 0.9631449631449631,
-        "support": 202.0
+      "classification_report": {
+        "Shringara": {
+          "precision": 0.941747572815534,
+          "recall": 0.9603960396039604,
+          "f1-score": 0.9509803921568627,
+          "support": 202.0
+        },
+        "Hasya": {
+          "precision": 0.9421487603305785,
+          "recall": 0.9193548387096774,
+          "f1-score": 0.9306122448979591,
+          "support": 248.0
+        },
+        "Karuna": {
+          "precision": 0.9752066115702479,
+          "recall": 0.9554655870445344,
+          "f1-score": 0.9652351738241309,
+          "support": 247.0
+        },
+        "Raudra": {
+          "precision": 0.9495798319327731,
+          "recall": 0.9495798319327731,
+          "f1-score": 0.9495798319327731,
+          "support": 238.0
+        },
+        "Veera": {
+          "precision": 0.9163179916317992,
+          "recall": 0.9439655172413793,
+          "f1-score": 0.9299363057324841,
+          "support": 232.0
+        },
+        "Bhayanaka": {
+          "precision": 0.9139344262295082,
+          "recall": 0.9214876033057852,
+          "f1-score": 0.9176954732510288,
+          "support": 242.0
+        },
+        "Bibhatsa": {
+          "precision": 0.96,
+          "recall": 0.927038626609442,
+          "f1-score": 0.9432314410480349,
+          "support": 233.0
+        },
+        "Adbhuta": {
+          "precision": 0.9563318777292577,
+          "recall": 0.9820627802690582,
+          "f1-score": 0.9690265486725663,
+          "support": 223.0
+        },
+        "Shanta": {
+          "precision": 0.9959016393442623,
+          "recall": 0.9959016393442623,
+          "f1-score": 0.9959016393442623,
+          "support": 244.0
+        },
+        "accuracy": 0.9502133712660028,
+        "macro avg": {
+          "precision": 0.9501298568426623,
+          "recall": 0.9505836071178747,
+          "f1-score": 0.9502443389844559,
+          "support": 2109.0
+        },
+        "weighted avg": {
+          "precision": 0.9504323609617427,
+          "recall": 0.9502133712660028,
+          "f1-score": 0.9502116346419156,
+          "support": 2109.0
+        }
       },
-      "Hasya": {
-        "precision": 0.9794238683127572,
-        "recall": 0.9558232931726908,
-        "f1-score": 0.967479674796748,
-        "support": 249.0
-      },
-      "Karuna": {
-        "precision": 0.984,
-        "recall": 0.9959514170040485,
-        "f1-score": 0.9899396378269618,
-        "support": 247.0
-      },
-      "Raudra": {
-        "precision": 0.9471544715447154,
-        "recall": 0.9748953974895398,
-        "f1-score": 0.9608247422680413,
-        "support": 239.0
-      },
-      "Veera": {
-        "precision": 0.9785407725321889,
-        "recall": 0.9702127659574468,
-        "f1-score": 0.9743589743589743,
-        "support": 235.0
-      },
-      "Bhayanaka": {
-        "precision": 0.970954356846473,
-        "recall": 0.9669421487603306,
-        "f1-score": 0.968944099378882,
-        "support": 242.0
-      },
-      "Bibhatsa": {
-        "precision": 0.9823008849557522,
-        "recall": 0.9487179487179487,
-        "f1-score": 0.9652173913043478,
-        "support": 234.0
-      },
-      "Adbhuta": {
-        "precision": 0.9690265486725663,
-        "recall": 0.9820627802690582,
-        "f1-score": 0.9755011135857461,
-        "support": 223.0
-      },
-      "Shanta": {
-        "precision": 0.9959183673469387,
-        "recall": 1.0,
-        "f1-score": 0.9979550102249489,
-        "support": 244.0
-      },
-      "accuracy": 0.9739952718676123,
-      "macro avg": {
-        "precision": 0.9737129812430001,
-        "recall": 0.9738780867860037,
-        "f1-score": 0.9737072896544015,
-        "support": 2115.0
-      },
-      "weighted avg": {
-        "precision": 0.9741416615576025,
-        "recall": 0.9739952718676123,
-        "f1-score": 0.9739798567086378,
-        "support": 2115.0
+      "latency_ms_per_sample": 58.893,
+      "confusing_pairs_analysis": {
+        "Hasya_vs_Bhayanaka": {
+          "class_a": "Hasya",
+          "class_b": "Bhayanaka",
+          "total_true_a": 248,
+          "total_true_b": 242,
+          "a_misclassified_as_b_count": 2,
+          "a_misclassified_as_b_percent": 0.81,
+          "b_misclassified_as_a_count": 0,
+          "b_misclassified_as_a_percent": 0.0,
+          "total_mutual_errors": 2,
+          "mutual_confusion_rate_percent": 0.41
+        },
+        "Karuna_vs_Shanta": {
+          "class_a": "Karuna",
+          "class_b": "Shanta",
+          "total_true_a": 247,
+          "total_true_b": 244,
+          "a_misclassified_as_b_count": 1,
+          "a_misclassified_as_b_percent": 0.4,
+          "b_misclassified_as_a_count": 0,
+          "b_misclassified_as_a_percent": 0.0,
+          "total_mutual_errors": 1,
+          "mutual_confusion_rate_percent": 0.2
+        },
+        "Raudra_vs_Veera": {
+          "class_a": "Raudra",
+          "class_b": "Veera",
+          "total_true_a": 238,
+          "total_true_b": 232,
+          "a_misclassified_as_b_count": 3,
+          "a_misclassified_as_b_percent": 1.26,
+          "b_misclassified_as_a_count": 6,
+          "b_misclassified_as_a_percent": 2.59,
+          "total_mutual_errors": 9,
+          "mutual_confusion_rate_percent": 1.91
+        },
+        "Adbhuta_vs_Bhayanaka": {
+          "class_a": "Adbhuta",
+          "class_b": "Bhayanaka",
+          "total_true_a": 223,
+          "total_true_b": 242,
+          "a_misclassified_as_b_count": 1,
+          "a_misclassified_as_b_percent": 0.45,
+          "b_misclassified_as_a_count": 5,
+          "b_misclassified_as_a_percent": 2.07,
+          "total_mutual_errors": 6,
+          "mutual_confusion_rate_percent": 1.29
+        }
       }
     }
   },
-  "efficientnet_b0": {
-    "accuracy": 0.9498817966903074,
-    "macro_precision": 0.9499224616331199,
-    "macro_recall": 0.9504394236852026,
-    "macro_f1": 0.9500381100509586,
-    "weighted_precision": 0.9497207565431259,
-    "weighted_recall": 0.9498817966903074,
-    "weighted_f1": 0.9496564678605514,
-    "per_class": {
-      "Shringara": {
-        "precision": 0.9514563106796117,
-        "recall": 0.9702970297029703,
-        "f1_score": 0.9607843137254902,
-        "support": 202
-      },
-      "Hasya": {
-        "precision": 0.9205020920502092,
-        "recall": 0.8835341365461847,
-        "f1_score": 0.9016393442622951,
-        "support": 249
-      },
-      "Karuna": {
-        "precision": 0.9516129032258065,
-        "recall": 0.9554655870445344,
-        "f1_score": 0.9535353535353536,
-        "support": 247
-      },
-      "Raudra": {
-        "precision": 0.948,
-        "recall": 0.9916317991631799,
-        "f1_score": 0.9693251533742331,
-        "support": 239
-      },
-      "Veera": {
-        "precision": 0.9574468085106383,
-        "recall": 0.9574468085106383,
-        "f1_score": 0.9574468085106383,
-        "support": 235
-      },
-      "Bhayanaka": {
-        "precision": 0.9428571428571428,
-        "recall": 0.9545454545454546,
-        "f1_score": 0.9486652977412731,
-        "support": 242
-      },
-      "Bibhatsa": {
-        "precision": 0.9380530973451328,
-        "recall": 0.905982905982906,
-        "f1_score": 0.9217391304347826,
-        "support": 234
-      },
-      "Adbhuta": {
-        "precision": 0.963963963963964,
-        "recall": 0.9596412556053812,
-        "f1_score": 0.9617977528089887,
-        "support": 223
-      },
-      "Shanta": {
-        "precision": 0.9754098360655737,
-        "recall": 0.9754098360655737,
-        "f1_score": 0.9754098360655737,
-        "support": 244
-      }
+  "benchmark_summary": {
+    "Model A (CLIP + LogReg)": {
+      "test_accuracy": 0.9743954480796586,
+      "macro_f1": 0.9743261587347458,
+      "weighted_f1": 0.9744025474176919,
+      "latency_ms": 0.01
     },
-    "confusion_matrix": [
-      [
-        196,
-        1,
-        0,
-        0,
-        0,
-        0,
-        3,
-        0,
-        2
-      ],
-      [
-        1,
-        220,
-        5,
-        4,
-        1,
-        5,
-        7,
-        4,
-        2
-      ],
-      [
-        4,
-        1,
-        236,
-        0,
-        3,
-        0,
-        3,
-        0,
-        0
-      ],
-      [
-        0,
-        0,
-        0,
-        237,
-        1,
-        1,
-        0,
-        0,
-        0
-      ],
-      [
-        0,
-        3,
-        1,
-        5,
-        225,
-        1,
-        0,
-        0,
-        0
-      ],
-      [
-        1,
-        1,
-        2,
-        3,
-        0,
-        231,
-        1,
-        1,
-        2
-      ],
-      [
-        2,
-        6,
-        2,
-        0,
-        4,
-        5,
-        212,
-        3,
-        0
-      ],
-      [
-        1,
-        2,
-        2,
-        1,
-        1,
-        2,
-        0,
-        214,
-        0
-      ],
-      [
-        1,
-        5,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        238
-      ]
-    ],
-    "classification_report": {
-      "Shringara": {
-        "precision": 0.9514563106796117,
-        "recall": 0.9702970297029703,
-        "f1-score": 0.9607843137254902,
-        "support": 202.0
-      },
-      "Hasya": {
-        "precision": 0.9205020920502092,
-        "recall": 0.8835341365461847,
-        "f1-score": 0.9016393442622951,
-        "support": 249.0
-      },
-      "Karuna": {
-        "precision": 0.9516129032258065,
-        "recall": 0.9554655870445344,
-        "f1-score": 0.9535353535353536,
-        "support": 247.0
-      },
-      "Raudra": {
-        "precision": 0.948,
-        "recall": 0.9916317991631799,
-        "f1-score": 0.9693251533742331,
-        "support": 239.0
-      },
-      "Veera": {
-        "precision": 0.9574468085106383,
-        "recall": 0.9574468085106383,
-        "f1-score": 0.9574468085106383,
-        "support": 235.0
-      },
-      "Bhayanaka": {
-        "precision": 0.9428571428571428,
-        "recall": 0.9545454545454546,
-        "f1-score": 0.9486652977412731,
-        "support": 242.0
-      },
-      "Bibhatsa": {
-        "precision": 0.9380530973451328,
-        "recall": 0.905982905982906,
-        "f1-score": 0.9217391304347826,
-        "support": 234.0
-      },
-      "Adbhuta": {
-        "precision": 0.963963963963964,
-        "recall": 0.9596412556053812,
-        "f1-score": 0.9617977528089887,
-        "support": 223.0
-      },
-      "Shanta": {
-        "precision": 0.9754098360655737,
-        "recall": 0.9754098360655737,
-        "f1-score": 0.9754098360655737,
-        "support": 244.0
-      },
-      "accuracy": 0.9498817966903074,
-      "macro avg": {
-        "precision": 0.9499224616331199,
-        "recall": 0.9504394236852026,
-        "f1-score": 0.9500381100509586,
-        "support": 2115.0
-      },
-      "weighted avg": {
-        "precision": 0.9497207565431259,
-        "recall": 0.9498817966903074,
-        "f1-score": 0.9496564678605514,
-        "support": 2115.0
-      }
-    }
-  },
-  "comparison_summary": {
-    "accuracy_difference": -2.41,
-    "macro_f1_difference": -2.37,
-    "winner": "CLIP + LogReg"
+    "Model B (CLIP + SVM)": {
+      "test_accuracy": 0.9919393077287814,
+      "macro_f1": 0.9918665471275072,
+      "weighted_f1": 0.991948090970636,
+      "latency_ms": 6.404
+    },
+    "Model C (EfficientNet-B0)": {
+      "test_accuracy": 0.9502133712660028,
+      "macro_f1": 0.9502443389844559,
+      "weighted_f1": 0.9502116346419156,
+      "latency_ms": 58.893
+    },
+    "selected_primary_model": "Model B (CLIP + SVM)",
+    "selection_rationale": "Model B (CLIP + SVM) achieved the highest test accuracy (99.19%) and highest macro F1-score (99.19%) on held-out facial crops, virtually resolving confusion between Hasya and Bhayanaka."
   }
 }

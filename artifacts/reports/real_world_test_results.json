@@ -1,0 +1,1100 @@
+[
+  {
+    "image_filename": "train (13).jpg",
+    "ground_truth": "Shringara",
+    "model_a": {
+      "prediction": "Shringara",
+      "confidence": 0.9790375232696533,
+      "is_correct": true,
+      "top3": [
+        [
+          "Shringara",
+          0.9790375232696533
+        ],
+        [
+          "Hasya",
+          0.008361454121768475
+        ],
+        [
+          "Adbhuta",
+          0.003680791240185499
+        ]
+      ]
+    },
+    "model_b": {
+      "prediction": "Shringara",
+      "confidence": 0.9988245623576096,
+      "is_correct": true,
+      "top3": [
+        [
+          "Shringara",
+          0.9988245623576096
+        ],
+        [
+          "Hasya",
+          0.0008312158130354734
+        ],
+        [
+          "Raudra",
+          0.00010497322143587509
+        ]
+      ]
+    },
+    "model_c": {
+      "prediction": "Shringara",
+      "confidence": 0.8857073783874512,
+      "is_correct": true,
+      "top3": [
+        [
+          "Shringara",
+          0.8857073783874512
+        ],
+        [
+          "Hasya",
+          0.07481367141008377
+        ],
+        [
+          "Shanta",
+          0.010417299345135689
+        ]
+      ]
+    }
+  },
+  {
+    "image_filename": "train (384).jpg",
+    "ground_truth": "Shringara",
+    "model_a": {
+      "prediction": "Shringara",
+      "confidence": 0.972432017326355,
+      "is_correct": true,
+      "top3": [
+        [
+          "Shringara",
+          0.972432017326355
+        ],
+        [
+          "Hasya",
+          0.019344590604305267
+        ],
+        [
+          "Adbhuta",
+          0.0037921236362308264
+        ]
+      ]
+    },
+    "model_b": {
+      "prediction": "Shringara",
+      "confidence": 0.9979613086534573,
+      "is_correct": true,
+      "top3": [
+        [
+          "Shringara",
+          0.9979613086534573
+        ],
+        [
+          "Hasya",
+          0.0016323936185580993
+        ],
+        [
+          "Adbhuta",
+          0.0002437773921785533
+        ]
+      ]
+    },
+    "model_c": {
+      "prediction": "Shringara",
+      "confidence": 0.6827846169471741,
+      "is_correct": true,
+      "top3": [
+        [
+          "Shringara",
+          0.6827846169471741
+        ],
+        [
+          "Bibhatsa",
+          0.13638900220394135
+        ],
+        [
+          "Hasya",
+          0.12292748689651489
+        ]
+      ]
+    }
+  },
+  {
+    "image_filename": "train (952).jpg",
+    "ground_truth": "Hasya",
+    "model_a": {
+      "prediction": "Hasya",
+      "confidence": 0.998248815536499,
+      "is_correct": true,
+      "top3": [
+        [
+          "Hasya",
+          0.998248815536499
+        ],
+        [
+          "Shringara",
+          0.0016069149132817984
+        ],
+        [
+          "Adbhuta",
+          9.241187945008278e-05
+        ]
+      ]
+    },
+    "model_b": {
+      "prediction": "Hasya",
+      "confidence": 0.999995661351838,
+      "is_correct": true,
+      "top3": [
+        [
+          "Hasya",
+          0.999995661351838
+        ],
+        [
+          "Adbhuta",
+          2.5336902621976327e-06
+        ],
+        [
+          "Shanta",
+          8.047014270483964e-07
+        ]
+      ]
+    },
+    "model_c": {
+      "prediction": "Hasya",
+      "confidence": 0.7212955951690674,
+      "is_correct": true,
+      "top3": [
+        [
+          "Hasya",
+          0.7212955951690674
+        ],
+        [
+          "Veera",
+          0.08466614037752151
+        ],
+        [
+          "Karuna",
+          0.0666351169347763
+        ]
+      ]
+    }
+  },
+  {
+    "image_filename": "train (783).jpg",
+    "ground_truth": "Hasya",
+    "model_a": {
+      "prediction": "Hasya",
+      "confidence": 0.9878478050231934,
+      "is_correct": true,
+      "top3": [
+        [
+          "Hasya",
+          0.9878478050231934
+        ],
+        [
+          "Shringara",
+          0.007884384132921696
+        ],
+        [
+          "Shanta",
+          0.002623665379360318
+        ]
+      ]
+    },
+    "model_b": {
+      "prediction": "Hasya",
+      "confidence": 0.9982476691747111,
+      "is_correct": true,
+      "top3": [
+        [
+          "Hasya",
+          0.9982476691747111
+        ],
+        [
+          "Bibhatsa",
+          0.0005201333493897602
+        ],
+        [
+          "Shringara",
+          0.0004735862415825905
+        ]
+      ]
+    },
+    "model_c": {
+      "prediction": "Hasya",
+      "confidence": 0.8866429924964905,
+      "is_correct": true,
+      "top3": [
+        [
+          "Hasya",
+          0.8866429924964905
+        ],
+        [
+          "Bibhatsa",
+          0.039745211601257324
+        ],
+        [
+          "Karuna",
+          0.02371455542743206
+        ]
+      ]
+    }
+  },
+  {
+    "image_filename": "train (1902).jpg",
+    "ground_truth": "Karuna",
+    "model_a": {
+      "prediction": "Karuna",
+      "confidence": 0.9366114735603333,
+      "is_correct": true,
+      "top3": [
+        [
+          "Karuna",
+          0.9366114735603333
+        ],
+        [
+          "Bibhatsa",
+          0.02299799583852291
+        ],
+        [
+          "Veera",
+          0.02038736827671528
+        ]
+      ]
+    },
+    "model_b": {
+      "prediction": "Karuna",
+      "confidence": 0.9949253740477043,
+      "is_correct": true,
+      "top3": [
+        [
+          "Karuna",
+          0.9949253740477043
+        ],
+        [
+          "Bibhatsa",
+          0.0027962556518517532
+        ],
+        [
+          "Bhayanaka",
+          0.0010492178538278921
+        ]
+      ]
+    },
+    "model_c": {
+      "prediction": "Karuna",
+      "confidence": 0.8531381487846375,
+      "is_correct": true,
+      "top3": [
+        [
+          "Karuna",
+          0.8531381487846375
+        ],
+        [
+          "Bibhatsa",
+          0.05910914018750191
+        ],
+        [
+          "Shringara",
+          0.03829342871904373
+        ]
+      ]
+    }
+  },
+  {
+    "image_filename": "train (1458).jpg",
+    "ground_truth": "Karuna",
+    "model_a": {
+      "prediction": "Karuna",
+      "confidence": 0.9759771823883057,
+      "is_correct": true,
+      "top3": [
+        [
+          "Karuna",
+          0.9759771823883057
+        ],
+        [
+          "Bhayanaka",
+          0.016091788187623024
+        ],
+        [
+          "Veera",
+          0.004185195546597242
+        ]
+      ]
+    },
+    "model_b": {
+      "prediction": "Karuna",
+      "confidence": 0.9966148856155532,
+      "is_correct": true,
+      "top3": [
+        [
+          "Karuna",
+          0.9966148856155532
+        ],
+        [
+          "Bhayanaka",
+          0.001796883635140352
+        ],
+        [
+          "Raudra",
+          0.0008403831042030559
+        ]
+      ]
+    },
+    "model_c": {
+      "prediction": "Karuna",
+      "confidence": 0.9501827955245972,
+      "is_correct": true,
+      "top3": [
+        [
+          "Karuna",
+          0.9501827955245972
+        ],
+        [
+          "Hasya",
+          0.012047888711094856
+        ],
+        [
+          "Veera",
+          0.01107729971408844
+        ]
+      ]
+    }
+  },
+  {
+    "image_filename": "train (336).jpg",
+    "ground_truth": "Raudra",
+    "model_a": {
+      "prediction": "Raudra",
+      "confidence": 0.7704036831855774,
+      "is_correct": true,
+      "top3": [
+        [
+          "Raudra",
+          0.7704036831855774
+        ],
+        [
+          "Adbhuta",
+          0.21739932894706726
+        ],
+        [
+          "Bhayanaka",
+          0.007935757748782635
+        ]
+      ]
+    },
+    "model_b": {
+      "prediction": "Raudra",
+      "confidence": 0.9933751164169574,
+      "is_correct": true,
+      "top3": [
+        [
+          "Raudra",
+          0.9933751164169574
+        ],
+        [
+          "Adbhuta",
+          0.005769284695953075
+        ],
+        [
+          "Hasya",
+          0.0005284241074877032
+        ]
+      ]
+    },
+    "model_c": {
+      "prediction": "Raudra",
+      "confidence": 0.8983899354934692,
+      "is_correct": true,
+      "top3": [
+        [
+          "Raudra",
+          0.8983899354934692
+        ],
+        [
+          "Adbhuta",
+          0.028631944209337234
+        ],
+        [
+          "Shringara",
+          0.017029695212841034
+        ]
+      ]
+    }
+  },
+  {
+    "image_filename": "train (443).jpg",
+    "ground_truth": "Raudra",
+    "model_a": {
+      "prediction": "Raudra",
+      "confidence": 0.9901055693626404,
+      "is_correct": true,
+      "top3": [
+        [
+          "Raudra",
+          0.9901055693626404
+        ],
+        [
+          "Adbhuta",
+          0.0056760055013000965
+        ],
+        [
+          "Veera",
+          0.003573777386918664
+        ]
+      ]
+    },
+    "model_b": {
+      "prediction": "Raudra",
+      "confidence": 0.997553279203558,
+      "is_correct": true,
+      "top3": [
+        [
+          "Raudra",
+          0.997553279203558
+        ],
+        [
+          "Veera",
+          0.0021456199557712496
+        ],
+        [
+          "Adbhuta",
+          0.00022310181120761816
+        ]
+      ]
+    },
+    "model_c": {
+      "prediction": "Raudra",
+      "confidence": 0.8869717717170715,
+      "is_correct": true,
+      "top3": [
+        [
+          "Raudra",
+          0.8869717717170715
+        ],
+        [
+          "Shanta",
+          0.02725156955420971
+        ],
+        [
+          "Adbhuta",
+          0.02303578145802021
+        ]
+      ]
+    }
+  },
+  {
+    "image_filename": "train (206).jpg",
+    "ground_truth": "Veera",
+    "model_a": {
+      "prediction": "Veera",
+      "confidence": 0.9519786238670349,
+      "is_correct": true,
+      "top3": [
+        [
+          "Veera",
+          0.9519786238670349
+        ],
+        [
+          "Shringara",
+          0.018586160615086555
+        ],
+        [
+          "Karuna",
+          0.011565007269382477
+        ]
+      ]
+    },
+    "model_b": {
+      "prediction": "Veera",
+      "confidence": 0.9956580549911503,
+      "is_correct": true,
+      "top3": [
+        [
+          "Veera",
+          0.9956580549911503
+        ],
+        [
+          "Shringara",
+          0.0021612052217161023
+        ],
+        [
+          "Hasya",
+          0.0005874421794238455
+        ]
+      ]
+    },
+    "model_c": {
+      "prediction": "Veera",
+      "confidence": 0.9625549912452698,
+      "is_correct": true,
+      "top3": [
+        [
+          "Veera",
+          0.9625549912452698
+        ],
+        [
+          "Karuna",
+          0.014030217193067074
+        ],
+        [
+          "Bibhatsa",
+          0.0075950319878757
+        ]
+      ]
+    }
+  },
+  {
+    "image_filename": "train (1181).jpg",
+    "ground_truth": "Veera",
+    "model_a": {
+      "prediction": "Veera",
+      "confidence": 0.8528544306755066,
+      "is_correct": true,
+      "top3": [
+        [
+          "Veera",
+          0.8528544306755066
+        ],
+        [
+          "Karuna",
+          0.07846640050411224
+        ],
+        [
+          "Raudra",
+          0.026653727516531944
+        ]
+      ]
+    },
+    "model_b": {
+      "prediction": "Veera",
+      "confidence": 0.9902443188216623,
+      "is_correct": true,
+      "top3": [
+        [
+          "Veera",
+          0.9902443188216623
+        ],
+        [
+          "Raudra",
+          0.003718194735823298
+        ],
+        [
+          "Karuna",
+          0.0030436593986935085
+        ]
+      ]
+    },
+    "model_c": {
+      "prediction": "Veera",
+      "confidence": 0.7534226775169373,
+      "is_correct": true,
+      "top3": [
+        [
+          "Veera",
+          0.7534226775169373
+        ],
+        [
+          "Karuna",
+          0.10672706365585327
+        ],
+        [
+          "Shanta",
+          0.052131131291389465
+        ]
+      ]
+    }
+  },
+  {
+    "image_filename": "train (541).jpg",
+    "ground_truth": "Bhayanaka",
+    "model_a": {
+      "prediction": "Bhayanaka",
+      "confidence": 0.5085744261741638,
+      "is_correct": true,
+      "top3": [
+        [
+          "Bhayanaka",
+          0.5085744261741638
+        ],
+        [
+          "Raudra",
+          0.42222124338150024
+        ],
+        [
+          "Veera",
+          0.02262931875884533
+        ]
+      ]
+    },
+    "model_b": {
+      "prediction": "Bhayanaka",
+      "confidence": 0.9297909176283267,
+      "is_correct": true,
+      "top3": [
+        [
+          "Bhayanaka",
+          0.9297909176283267
+        ],
+        [
+          "Raudra",
+          0.06517653836659595
+        ],
+        [
+          "Bibhatsa",
+          0.0023093233186825763
+        ]
+      ]
+    },
+    "model_c": {
+      "prediction": "Bhayanaka",
+      "confidence": 0.7719904184341431,
+      "is_correct": true,
+      "top3": [
+        [
+          "Bhayanaka",
+          0.7719904184341431
+        ],
+        [
+          "Raudra",
+          0.18723459541797638
+        ],
+        [
+          "Veera",
+          0.020466027781367302
+        ]
+      ]
+    }
+  },
+  {
+    "image_filename": "train (1715).jpg",
+    "ground_truth": "Bhayanaka",
+    "model_a": {
+      "prediction": "Bhayanaka",
+      "confidence": 0.9887025356292725,
+      "is_correct": true,
+      "top3": [
+        [
+          "Bhayanaka",
+          0.9887025356292725
+        ],
+        [
+          "Bibhatsa",
+          0.004612610675394535
+        ],
+        [
+          "Karuna",
+          0.0032964085694402456
+        ]
+      ]
+    },
+    "model_b": {
+      "prediction": "Bhayanaka",
+      "confidence": 0.9999765481558988,
+      "is_correct": true,
+      "top3": [
+        [
+          "Bhayanaka",
+          0.9999765481558988
+        ],
+        [
+          "Bibhatsa",
+          1.6249742320009013e-05
+        ],
+        [
+          "Adbhuta",
+          4.8295891279979085e-06
+        ]
+      ]
+    },
+    "model_c": {
+      "prediction": "Bhayanaka",
+      "confidence": 0.9709659814834595,
+      "is_correct": true,
+      "top3": [
+        [
+          "Bhayanaka",
+          0.9709659814834595
+        ],
+        [
+          "Shringara",
+          0.00775887630879879
+        ],
+        [
+          "Bibhatsa",
+          0.007740661036223173
+        ]
+      ]
+    }
+  },
+  {
+    "image_filename": "train (1370).jpg",
+    "ground_truth": "Bibhatsa",
+    "model_a": {
+      "prediction": "Bibhatsa",
+      "confidence": 0.8570870161056519,
+      "is_correct": true,
+      "top3": [
+        [
+          "Bibhatsa",
+          0.8570870161056519
+        ],
+        [
+          "Hasya",
+          0.036185894161462784
+        ],
+        [
+          "Bhayanaka",
+          0.022241758182644844
+        ]
+      ]
+    },
+    "model_b": {
+      "prediction": "Bibhatsa",
+      "confidence": 0.9948568998906422,
+      "is_correct": true,
+      "top3": [
+        [
+          "Bibhatsa",
+          0.9948568998906422
+        ],
+        [
+          "Raudra",
+          0.0011535571823111765
+        ],
+        [
+          "Hasya",
+          0.0011366653807467076
+        ]
+      ]
+    },
+    "model_c": {
+      "prediction": "Bibhatsa",
+      "confidence": 0.8495666980743408,
+      "is_correct": true,
+      "top3": [
+        [
+          "Bibhatsa",
+          0.8495666980743408
+        ],
+        [
+          "Hasya",
+          0.04743995890021324
+        ],
+        [
+          "Bhayanaka",
+          0.042772043496370316
+        ]
+      ]
+    }
+  },
+  {
+    "image_filename": "train (767).jpg",
+    "ground_truth": "Bibhatsa",
+    "model_a": {
+      "prediction": "Bibhatsa",
+      "confidence": 0.7903781533241272,
+      "is_correct": true,
+      "top3": [
+        [
+          "Bibhatsa",
+          0.7903781533241272
+        ],
+        [
+          "Shringara",
+          0.14213508367538452
+        ],
+        [
+          "Hasya",
+          0.031158022582530975
+        ]
+      ]
+    },
+    "model_b": {
+      "prediction": "Bibhatsa",
+      "confidence": 0.9892745600899508,
+      "is_correct": true,
+      "top3": [
+        [
+          "Bibhatsa",
+          0.9892745600899508
+        ],
+        [
+          "Shringara",
+          0.0074800677252261335
+        ],
+        [
+          "Hasya",
+          0.001681864613233095
+        ]
+      ]
+    },
+    "model_c": {
+      "prediction": "Bibhatsa",
+      "confidence": 0.8916374444961548,
+      "is_correct": true,
+      "top3": [
+        [
+          "Bibhatsa",
+          0.8916374444961548
+        ],
+        [
+          "Shringara",
+          0.04682252183556557
+        ],
+        [
+          "Bhayanaka",
+          0.030094312503933907
+        ]
+      ]
+    }
+  },
+  {
+    "image_filename": "train (1727).jpg",
+    "ground_truth": "Adbhuta",
+    "model_a": {
+      "prediction": "Adbhuta",
+      "confidence": 0.7936086654663086,
+      "is_correct": true,
+      "top3": [
+        [
+          "Adbhuta",
+          0.7936086654663086
+        ],
+        [
+          "Raudra",
+          0.16464263200759888
+        ],
+        [
+          "Bhayanaka",
+          0.016619250178337097
+        ]
+      ]
+    },
+    "model_b": {
+      "prediction": "Adbhuta",
+      "confidence": 0.9935163087356425,
+      "is_correct": true,
+      "top3": [
+        [
+          "Adbhuta",
+          0.9935163087356425
+        ],
+        [
+          "Raudra",
+          0.0036605527383455844
+        ],
+        [
+          "Bhayanaka",
+          0.0007993218347764699
+        ]
+      ]
+    },
+    "model_c": {
+      "prediction": "Adbhuta",
+      "confidence": 0.5824072957038879,
+      "is_correct": true,
+      "top3": [
+        [
+          "Adbhuta",
+          0.5824072957038879
+        ],
+        [
+          "Shanta",
+          0.15605096518993378
+        ],
+        [
+          "Raudra",
+          0.126799538731575
+        ]
+      ]
+    }
+  },
+  {
+    "image_filename": "train (1624).jpg",
+    "ground_truth": "Adbhuta",
+    "model_a": {
+      "prediction": "Adbhuta",
+      "confidence": 0.7120857834815979,
+      "is_correct": true,
+      "top3": [
+        [
+          "Adbhuta",
+          0.7120857834815979
+        ],
+        [
+          "Bhayanaka",
+          0.27469879388809204
+        ],
+        [
+          "Raudra",
+          0.008675149641931057
+        ]
+      ]
+    },
+    "model_b": {
+      "prediction": "Adbhuta",
+      "confidence": 0.9960569326770367,
+      "is_correct": true,
+      "top3": [
+        [
+          "Adbhuta",
+          0.9960569326770367
+        ],
+        [
+          "Bhayanaka",
+          0.0024371835491425993
+        ],
+        [
+          "Raudra",
+          0.0008768895339042722
+        ]
+      ]
+    },
+    "model_c": {
+      "prediction": "Adbhuta",
+      "confidence": 0.829550564289093,
+      "is_correct": true,
+      "top3": [
+        [
+          "Adbhuta",
+          0.829550564289093
+        ],
+        [
+          "Karuna",
+          0.1055450588464737
+        ],
+        [
+          "Bhayanaka",
+          0.0267769917845726
+        ]
+      ]
+    }
+  },
+  {
+    "image_filename": "train (1281).jpg",
+    "ground_truth": "Shanta",
+    "model_a": {
+      "prediction": "Shanta",
+      "confidence": 0.9714412689208984,
+      "is_correct": true,
+      "top3": [
+        [
+          "Shanta",
+          0.9714412689208984
+        ],
+        [
+          "Veera",
+          0.015045932494103909
+        ],
+        [
+          "Karuna",
+          0.0044617922976613045
+        ]
+      ]
+    },
+    "model_b": {
+      "prediction": "Shanta",
+      "confidence": 0.9963796025452833,
+      "is_correct": true,
+      "top3": [
+        [
+          "Shanta",
+          0.9963796025452833
+        ],
+        [
+          "Karuna",
+          0.0014371321428088212
+        ],
+        [
+          "Adbhuta",
+          0.0006205143294643295
+        ]
+      ]
+    },
+    "model_c": {
+      "prediction": "Shanta",
+      "confidence": 0.9300312995910645,
+      "is_correct": true,
+      "top3": [
+        [
+          "Shanta",
+          0.9300312995910645
+        ],
+        [
+          "Veera",
+          0.02307409979403019
+        ],
+        [
+          "Karuna",
+          0.021572237834334373
+        ]
+      ]
+    }
+  },
+  {
+    "image_filename": "train (46).jpg",
+    "ground_truth": "Shanta",
+    "model_a": {
+      "prediction": "Shanta",
+      "confidence": 0.9629724621772766,
+      "is_correct": true,
+      "top3": [
+        [
+          "Shanta",
+          0.9629724621772766
+        ],
+        [
+          "Shringara",
+          0.023470496758818626
+        ],
+        [
+          "Karuna",
+          0.006962061394006014
+        ]
+      ]
+    },
+    "model_b": {
+      "prediction": "Shanta",
+      "confidence": 0.9980656196131783,
+      "is_correct": true,
+      "top3": [
+        [
+          "Shanta",
+          0.9980656196131783
+        ],
+        [
+          "Shringara",
+          0.0005032133597362644
+        ],
+        [
+          "Karuna",
+          0.00045054739325744254
+        ]
+      ]
+    },
+    "model_c": {
+      "prediction": "Shanta",
+      "confidence": 0.9779694080352783,
+      "is_correct": true,
+      "top3": [
+        [
+          "Shanta",
+          0.9779694080352783
+        ],
+        [
+          "Shringara",
+          0.01086430624127388
+        ],
+        [
+          "Karuna",
+          0.004405018873512745
+        ]
+      ]
+    }
+  }
+]

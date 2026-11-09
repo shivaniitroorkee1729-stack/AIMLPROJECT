@@ -29,12 +29,16 @@ class NavarasaDataset(Dataset):
 
     def __getitem__(self, idx):
         row = self.df.iloc[idx]
-        rel_path = row["filepath"]
-        full_path = self.base_dir / rel_path
-
-        # If full_path does not exist, try absolute_path column
-        if not full_path.exists() and "absolute_path" in row:
-            full_path = Path(row["absolute_path"])
+        if "crop_filepath" in row:
+            rel_path = row["crop_filepath"]
+            full_path = self.base_dir / "data" / rel_path
+            if not full_path.exists() and "crop_absolute_path" in row:
+                full_path = Path(row["crop_absolute_path"])
+        else:
+            rel_path = row["filepath"]
+            full_path = self.base_dir / rel_path
+            if not full_path.exists() and "absolute_path" in row:
+                full_path = Path(row["absolute_path"])
 
         try:
             image = Image.open(full_path).convert("RGB")
@@ -54,13 +58,14 @@ def get_dataloaders(
     train_transform=None,
     val_transform=None,
     test_transform=None,
+    use_crops=True,
 ):
     """
     Constructs PyTorch DataLoaders for train, val, and test splits.
     """
-    train_csv = SPLITS_DIR / "train.csv"
-    val_csv = SPLITS_DIR / "val.csv"
-    test_csv = SPLITS_DIR / "test.csv"
+    train_csv = SPLITS_DIR / ("train_crops.csv" if use_crops and (SPLITS_DIR / "train_crops.csv").exists() else "train.csv")
+    val_csv = SPLITS_DIR / ("val_crops.csv" if use_crops and (SPLITS_DIR / "val_crops.csv").exists() else "val.csv")
+    test_csv = SPLITS_DIR / ("test_crops.csv" if use_crops and (SPLITS_DIR / "test_crops.csv").exists() else "test.csv")
 
     if train_transform is None:
         train_transform = get_efficientnet_transforms(is_training=True)

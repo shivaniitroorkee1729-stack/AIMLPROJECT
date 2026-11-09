@@ -14,9 +14,11 @@ ENV/
 # Large Dataset Directories (Explicitly required by project instructions)
 data/raw/
 data/processed/
+data/face_crops/
 
 # Embedding caches (large binary arrays)
 *.npz
+artifacts/models/effnet_face_crops_features.pt
 
 # Unpacked large model weights (assembled automatically at runtime from chunked binaries)
 artifacts/models/clip_visual_encoder.pt
