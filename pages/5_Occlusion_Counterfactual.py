@@ -193,13 +193,15 @@ else:
                 st.success("✅ Prediction stable (no class flip)")
 
     with tab_cf:
+        target_prob_val = cf_results.get("target_class_current_prob", cf_results.get("target_probability", 0.0))
+        shift_val = cf_results.get("required_shift", max(0.0, round(orig_probs.get(orig_cls, 0.0) - target_prob_val, 4)))
         st.markdown(
             f"""
             <div class="navarasa-card">
                 <h3>Counterfactual Goal: Shift from <b>{orig_cls}</b> &rarr; <b>{target_counterfactual}</b></h3>
                 <p style="color: {THEME['text_muted']};">
-                    Baseline Target Probability: <b>{cf_results['target_class_current_prob'] * 100:.2f}%</b> &bull;
-                    Required Confidence Shift: <b>+{cf_results['required_shift'] * 100:.2f}%</b>
+                    Baseline Target Probability: <b>{target_prob_val * 100:.2f}%</b> &bull;
+                    Required Confidence Shift: <b>+{shift_val * 100:.2f}%</b>
                 </p>
             </div>
             """,
@@ -207,18 +209,24 @@ else:
         )
 
         st.markdown("#### Recommended Muscular Action Unit Adjustments")
-        cf_recs = cf_results["recommendations"]
+        cf_recs = cf_results.get("recommendations", cf_results.get("feature_adjustments", []))
 
         if not cf_recs:
             st.info("No major muscular adjustments required — already close or minimal divergence.")
         else:
             for rec in cf_recs:
+                au_id = rec.get("au_id", "")
+                au_name = rec.get("name", "")
+                au_muscle = rec.get("muscle", "")
+                au_action = rec.get("action", "Adjust")
+                au_shift = rec.get("target_intensity_shift", abs(rec.get("delta", 0.0)))
+                au_vis = rec.get("visual_direction", rec.get("anatomical_action", ""))
                 st.markdown(
                     f"""
                     <div style="background: #FFFFFF; border-left: 4px solid {THEME['deep_green']}; padding: 10px 14px; margin-bottom: 8px; border-radius: 6px;">
-                        <b>{rec['au_id']} — {rec['name']} ({rec['muscle']}):</b><br/>
-                        Action: <b>{rec['action']}</b> by ~<b>{rec['target_intensity_shift'] * 100:.0f}%</b> intensity.<br/>
-                        <span style="font-size: 0.85rem; color: {THEME['text_muted']};">{rec['visual_direction']}</span>
+                        <b>{au_id} — {au_name} ({au_muscle}):</b><br/>
+                        Action: <b>{au_action}</b> by ~<b>{au_shift * 100:.0f}%</b> intensity.<br/>
+                        <span style="font-size: 0.85rem; color: {THEME['text_muted']};">{au_vis}</span>
                     </div>
                     """,
                     unsafe_allow_html=True,

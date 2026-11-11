@@ -53,13 +53,21 @@ class TopTwoComparator:
         au_top2 = [meta for meta in action_units.values()
                    if top2_class in meta["relevant_rasas"] and meta["is_active"]]
 
+        margin_status = "Close Competition" if margin < 0.15 else "Decisive Lead"
+        summary = (
+            f"{top1_class} leads over {top2_class} with a {margin * 100:.1f}% probability margin "
+            f"({margin_status})."
+        )
+
         return {
             "top1_class": top1_class,
             "top1_probability": round(top1_prob, 4),
             "top2_class": top2_class,
             "top2_probability": round(top2_prob, 4),
             "probability_margin": margin,
-            "margin_status": "Close Competition" if margin < 0.15 else "Decisive Lead",
+            "margin": margin,
+            "margin_status": margin_status,
+            "summary": summary,
             "region_differences": region_diffs,
             "regions_favoring_top1": regions_favoring_top1,
             "regions_favoring_top2": regions_favoring_top2,
@@ -90,8 +98,23 @@ class CounterfactualFeatureAnalyzer:
         Returns:
             counterfactual_report: dict
         """
+        source_prob = round(float(current_probs.get(current_class, 0.0)), 4)
+        target_prob = round(float(current_probs.get(target_class, 0.0)), 4)
+        required_shift = max(0.0, round(source_prob - target_prob, 4))
+
         if current_class == target_class:
             return {
+                "source_class": current_class,
+                "source_probability": source_prob,
+                "target_class": target_class,
+                "target_probability": target_prob,
+                "target_class_current_prob": target_prob,
+                "required_shift": 0.0,
+                "feature_adjustments": [],
+                "recommendations": [],
+                "scientific_disclaimer": (
+                    "Current class and target class are identical. No perturbation needed."
+                ),
                 "message": "Current class and target class are identical. No perturbation needed."
             }
 
@@ -114,11 +137,15 @@ class CounterfactualFeatureAnalyzer:
                 feature_shifts.append({
                     "au_id": au_id,
                     "name": meta["name"],
+                    "muscle": meta["muscle"],
                     "direction": "INCREASE",
+                    "action": "Contract / Increase",
                     "current_intensity": curr_intensity,
                     "suggested_intensity": target_intensity,
                     "delta": delta,
+                    "target_intensity_shift": abs(delta),
                     "anatomical_action": meta["description"],
+                    "visual_direction": meta["description"],
                 })
 
         # 2. Current conflicting AUs that need to be relaxed / decreased
@@ -127,24 +154,32 @@ class CounterfactualFeatureAnalyzer:
                 curr_intensity = current_aus.get(au_id, {}).get("intensity", 0.0)
                 if curr_intensity > 0.20:
                     delta = round(curr_intensity - 0.05, 2)
+                    muscle_name = meta['muscle'].split(',')[0]
                     feature_shifts.append({
                         "au_id": au_id,
                         "name": meta["name"],
+                        "muscle": meta["muscle"],
                         "direction": "DECREASE",
+                        "action": "Relax / Decrease",
                         "current_intensity": curr_intensity,
                         "suggested_intensity": 0.05,
                         "delta": -delta,
-                        "anatomical_action": f"Relax {meta['muscle'].split(',')[0]}",
+                        "target_intensity_shift": abs(delta),
+                        "anatomical_action": f"Relax {muscle_name}",
+                        "visual_direction": f"Relax {muscle_name} to diminish {current_class} appearance.",
                     })
 
         sorted_shifts = sorted(feature_shifts, key=lambda x: abs(x["delta"]), reverse=True)
 
         return {
             "source_class": current_class,
-            "source_probability": round(current_probs.get(current_class, 0.0), 4),
+            "source_probability": source_prob,
             "target_class": target_class,
-            "target_probability": round(current_probs.get(target_class, 0.0), 4),
+            "target_probability": target_prob,
+            "target_class_current_prob": target_prob,
+            "required_shift": required_shift,
             "feature_adjustments": sorted_shifts,
+            "recommendations": sorted_shifts,
             "scientific_disclaimer": (
                 "Feature-level counterfactual estimation models simulated muscle adjustments "
                 "based on empirical FACS action unit definitions. It does not fabricate altered pixel "

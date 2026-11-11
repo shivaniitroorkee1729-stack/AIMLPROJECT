@@ -221,16 +221,21 @@ else:
 
     with tab_top2:
         st.markdown("### Contrastive Analysis Between Top Two Competing Rasas")
+        margin_val = top2_report.get("margin", top2_report.get("probability_margin", round(top1_prob - top2_prob, 4)))
+        summary_val = top2_report.get(
+            "summary",
+            f"{top1_cls} leads over {top2_cls} with a {margin_val * 100:.1f}% probability margin ({top2_report.get('margin_status', 'Decisive Lead')})."
+        )
         st.markdown(
             f"""
             <div class="navarasa-card">
-                <h3>Top-Two Probability Margin: <b>{top2_report['margin'] * 100:.1f}%</b></h3>
+                <h3>Top-Two Probability Margin: <b>{margin_val * 100:.1f}%</b></h3>
                 <p>
                     Primary Candidate: <b>{top1_cls}</b> ({top1_prob * 100:.1f}%) &bull; 
                     Secondary Competitor: <b>{top2_cls}</b> ({top2_prob * 100:.1f}%)
                 </p>
                 <p style="font-size: 0.95rem; color: {THEME['text_dark']};">
-                    {top2_report['summary']}
+                    {summary_val}
                 </p>
             </div>
             """,
